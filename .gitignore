@@ -1,0 +1,23 @@
+# Vivado temporary and run folders
+vivado/*.cache/
+vivado/*.hw/
+vivado/*.ip_user_files/
+vivado/*.sim/
+vivado/*.runs/
+vivado/*.gen/
+vivado/.Xil/
+vivado/*.str
+vivado/*.jou
+vivado/*.log
+
+# Global simulation & Vivado logs
+*.log
+*.jou
+*.pb
+*.wdb
+*.vcd
+.Xil/
+
+# OS specific files
+.DS_Store
+*~
