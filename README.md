@@ -1,4 +1,4 @@
-# DVB_RCS2_turbo_encoder
+# Turbo Encoder
 
 A hardware/software implementation of the duo-binary Turbo Forward Error Correction (FEC) Encoder compliant with the **DVB-RCS2** (Digital Video Broadcasting - Second Generation Return Channel over Satellite) standard as defined in **ETSI EN 301 545-2**. 
 
