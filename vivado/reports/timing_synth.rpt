@@ -1,0 +1,642 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
+| Date         : Tue Oct 13 11:38:05 2026
+| Host         : luffy running 64-bit Linux Mint 22.3
+| Command      : report_timing_summary -file /home/ahammed/Documents/Vivado/dvb_rcs2_turbo_encoder/vivado/reports/timing_synth.rpt
+| Design       : turbo_encoder_top
+| Device       : 7a35t-csg324
+| Speed File   : -1  PRODUCTION 1.23 2018-06-13
+| Design State : Synthesized
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Timing Summary Report
+
+------------------------------------------------------------------------------------------------
+| Timer Settings
+| --------------
+------------------------------------------------------------------------------------------------
+
+  Enable Multi Corner Analysis               :  Yes
+  Enable Pessimism Removal                   :  Yes
+  Pessimism Removal Resolution               :  Nearest Common Node
+  Enable Input Delay Default Clock           :  No
+  Enable Preset / Clear Arcs                 :  No
+  Disable Flight Delays                      :  No
+  Ignore I/O Paths                           :  No
+  Timing Early Launch at Borrowing Latches   :  No
+  Borrow Time for Max Delay Exceptions       :  Yes
+  Merge Timing Exceptions                    :  Yes
+  Inter-SLR Compensation                     :  Conservative
+
+  Corner  Analyze    Analyze    
+  Name    Max Paths  Min Paths  
+  ------  ---------  ---------  
+  Slow    Yes        Yes        
+  Fast    Yes        Yes        
+
+
+------------------------------------------------------------------------------------------------
+| Report Methodology
+| ------------------
+------------------------------------------------------------------------------------------------
+
+No report available as report_methodology has not been run prior. Run report_methodology on the current design for the summary of methodology violations.
+
+
+
+check_timing report
+
+Table of Contents
+-----------------
+1. checking no_clock (0)
+2. checking constant_clock (0)
+3. checking pulse_width_clock (0)
+4. checking unconstrained_internal_endpoints (0)
+5. checking no_input_delay (1)
+6. checking no_output_delay (0)
+7. checking multiple_clock (0)
+8. checking generated_clocks (0)
+9. checking loops (0)
+10. checking partial_input_delay (0)
+11. checking partial_output_delay (0)
+12. checking latch_loops (0)
+
+1. checking no_clock (0)
+------------------------
+ There are 0 register/latch pins with no clock.
+
+
+2. checking constant_clock (0)
+------------------------------
+ There are 0 register/latch pins with constant_clock.
+
+
+3. checking pulse_width_clock (0)
+---------------------------------
+ There are 0 register/latch pins which need pulse_width check
+
+
+4. checking unconstrained_internal_endpoints (0)
+------------------------------------------------
+ There are 0 pins that are not constrained for maximum delay.
+
+ There are 0 pins that are not constrained for maximum delay due to constant clock.
+
+
+5. checking no_input_delay (1)
+------------------------------
+ There are 0 input ports with no input delay specified.
+
+ There is 1 input port with no input delay but user has a false path constraint. (MEDIUM)
+
+
+6. checking no_output_delay (0)
+-------------------------------
+ There are 0 ports with no output delay specified.
+
+ There are 0 ports with no output delay but user has a false path constraint
+
+ There are 0 ports with no output delay but with a timing clock defined on it or propagating through it
+
+
+7. checking multiple_clock (0)
+------------------------------
+ There are 0 register/latch pins with multiple clocks.
+
+
+8. checking generated_clocks (0)
+--------------------------------
+ There are 0 generated clocks that are not connected to a clock source.
+
+
+9. checking loops (0)
+---------------------
+ There are 0 combinational loops in the design.
+
+
+10. checking partial_input_delay (0)
+------------------------------------
+ There are 0 input ports with partial input delay specified.
+
+
+11. checking partial_output_delay (0)
+-------------------------------------
+ There are 0 ports with partial output delay specified.
+
+
+12. checking latch_loops (0)
+----------------------------
+ There are 0 combinational latch loops in the design through latch input
+
+
+
+------------------------------------------------------------------------------------------------
+| Design Timing Summary
+| ---------------------
+------------------------------------------------------------------------------------------------
+
+    WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
+    -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
+    -44.121     -469.863                     11                  213       -0.794       -2.189                      4                  213        4.500        0.000                       0                    62  
+
+
+Timing constraints are not met.
+
+
+------------------------------------------------------------------------------------------------
+| Clock Summary
+| -------------
+------------------------------------------------------------------------------------------------
+
+Clock    Waveform(ns)       Period(ns)      Frequency(MHz)
+-----    ------------       ----------      --------------
+sys_clk  {0.000 5.000}      10.000          100.000         
+
+
+------------------------------------------------------------------------------------------------
+| Intra Clock Table
+| -----------------
+------------------------------------------------------------------------------------------------
+
+Clock             WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
+-----             -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
+sys_clk           -44.121     -469.863                     11                  213       -0.794       -2.189                      4                  213        4.500        0.000                       0                    62  
+
+
+------------------------------------------------------------------------------------------------
+| Inter Clock Table
+| -----------------
+------------------------------------------------------------------------------------------------
+
+From Clock    To Clock          WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints  
+----------    --------          -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------  
+
+
+------------------------------------------------------------------------------------------------
+| Other Path Groups Table
+| -----------------------
+------------------------------------------------------------------------------------------------
+
+Path Group    From Clock    To Clock          WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints  
+----------    ----------    --------          -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------  
+
+
+------------------------------------------------------------------------------------------------
+| Timing Details
+| --------------
+------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------
+From Clock:  sys_clk
+  To Clock:  sys_clk
+
+Setup :           11  Failing Endpoints,  Worst Slack      -44.121ns,  Total Violation     -469.863ns
+Hold  :            4  Failing Endpoints,  Worst Slack       -0.794ns,  Total Violation       -2.189ns
+PW    :            0  Failing Endpoints,  Worst Slack        4.500ns,  Total Violation        0.000ns
+---------------------------------------------------------------------------------------------------
+
+
+Max Delay Paths
+--------------------------------------------------------------------------------------
+Slack (VIOLATED) :        -44.121ns  (required time - arrival time)
+  Source:                 arp_Q0[10]
+                            (input port clocked by sys_clk  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Destination:            u_sys_ram/mem_reg/ADDRBWRADDR[13]
+                            (rising edge-triggered cell RAMB18E1 clocked by sys_clk  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Path Group:             sys_clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            10.000ns  (sys_clk rise@10.000ns - sys_clk rise@0.000ns)
+  Data Path Delay:        53.649ns  (logic 37.880ns (70.608%)  route 15.769ns (29.392%))
+  Logic Levels:           116  (CARRY4=84 DSP48E1=2 IBUF=1 LUT2=1 LUT3=21 LUT4=2 LUT5=3 LUT6=2)
+  Input Delay:            2.000ns
+  Clock Path Skew:        2.129ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    2.129ns = ( 12.129 - 10.000 ) 
+    Source Clock Delay      (SCD):    0.000ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock sys_clk rise edge)    0.000     0.000 r  
+                         input delay                  2.000     2.000    
+                                                      0.000     2.000 r  arp_Q0[10] (IN)
+                         net (fo=0)                   0.000     2.000    arp_Q0[10]
+                         IBUF (Prop_ibuf_I_O)         0.973     2.973 r  arp_Q0_IBUF[10]_inst/O
+                         net (fo=2, unplaced)         0.800     3.773    u_arp/A[10]
+                         DSP48E1 (Prop_dsp48e1_A[12]_P[21])
+                                                      3.841     7.614 r  u_arp/Qj0/P[21]
+                         net (fo=1, unplaced)         0.800     8.414    u_arp/Qj0_n_84
+                         LUT4 (Prop_lut4_I3_O)        0.124     8.538 r  u_arp/full_sum_i_19/O
+                         net (fo=1, unplaced)         0.800     9.337    u_arp/full_sum_i_19_n_0
+                         DSP48E1 (Prop_dsp48e1_A[3]_P[21])
+                                                      2.077    11.414 r  u_arp/full_sum/P[21]
+                         net (fo=2, unplaced)         0.800    12.214    u_arp/full_sum__0[21]
+                         LUT2 (Prop_lut2_I1_O)        0.124    12.338 r  u_arp/int_addr_carry_i_7/O
+                         net (fo=1, unplaced)         0.000    12.338    u_arp/int_addr_carry_i_7_n_0
+                         CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.851 r  u_arp/int_addr_carry/CO[3]
+                         net (fo=1, unplaced)         0.009    12.860    u_arp/int_addr_carry_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.977 r  u_arp/int_addr_carry__0/CO[3]
+                         net (fo=1, unplaced)         0.000    12.977    u_arp/int_addr_carry__0_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    13.094 r  u_arp/int_addr_carry__1/CO[3]
+                         net (fo=14, unplaced)        0.969    14.063    u_arp/int_addr_carry__1_n_0
+                         LUT3 (Prop_lut3_I0_O)        0.124    14.187 r  u_arp/mem_reg_i_370/O
+                         net (fo=1, unplaced)         0.000    14.187    u_arp/mem_reg_i_370_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    14.720 r  u_arp/mem_reg_i_351/CO[3]
+                         net (fo=1, unplaced)         0.009    14.729    u_arp/mem_reg_i_351_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    14.846 r  u_arp/mem_reg_i_346/CO[3]
+                         net (fo=1, unplaced)         0.000    14.846    u_arp/mem_reg_i_346_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    14.963 r  u_arp/mem_reg_i_345/CO[3]
+                         net (fo=1, unplaced)         0.000    14.963    u_arp/mem_reg_i_345_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    15.244 r  u_arp/mem_reg_i_343/CO[0]
+                         net (fo=14, unplaced)        0.362    15.606    u_arp/mem_reg_i_343_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    15.973 r  u_arp/mem_reg_i_358/O
+                         net (fo=1, unplaced)         0.000    15.973    u_arp/mem_reg_i_358_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    16.506 r  u_arp/mem_reg_i_335/CO[3]
+                         net (fo=1, unplaced)         0.009    16.515    u_arp/mem_reg_i_335_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    16.632 r  u_arp/mem_reg_i_330/CO[3]
+                         net (fo=1, unplaced)         0.000    16.632    u_arp/mem_reg_i_330_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    16.749 r  u_arp/mem_reg_i_329/CO[3]
+                         net (fo=1, unplaced)         0.000    16.749    u_arp/mem_reg_i_329_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    17.030 r  u_arp/mem_reg_i_327/CO[0]
+                         net (fo=14, unplaced)        0.362    17.392    u_arp/mem_reg_i_327_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    17.759 r  u_arp/mem_reg_i_342/O
+                         net (fo=1, unplaced)         0.000    17.759    u_arp/mem_reg_i_342_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    18.292 r  u_arp/mem_reg_i_319/CO[3]
+                         net (fo=1, unplaced)         0.009    18.301    u_arp/mem_reg_i_319_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    18.418 r  u_arp/mem_reg_i_314/CO[3]
+                         net (fo=1, unplaced)         0.000    18.418    u_arp/mem_reg_i_314_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    18.535 r  u_arp/mem_reg_i_313/CO[3]
+                         net (fo=1, unplaced)         0.000    18.535    u_arp/mem_reg_i_313_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    18.816 r  u_arp/mem_reg_i_311/CO[0]
+                         net (fo=14, unplaced)        0.362    19.178    u_arp/mem_reg_i_311_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    19.545 r  u_arp/mem_reg_i_326/O
+                         net (fo=1, unplaced)         0.000    19.545    u_arp/mem_reg_i_326_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    20.078 r  u_arp/mem_reg_i_303/CO[3]
+                         net (fo=1, unplaced)         0.009    20.087    u_arp/mem_reg_i_303_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    20.204 r  u_arp/mem_reg_i_298/CO[3]
+                         net (fo=1, unplaced)         0.000    20.204    u_arp/mem_reg_i_298_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    20.321 r  u_arp/mem_reg_i_297/CO[3]
+                         net (fo=1, unplaced)         0.000    20.321    u_arp/mem_reg_i_297_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    20.602 r  u_arp/mem_reg_i_295/CO[0]
+                         net (fo=14, unplaced)        0.362    20.964    u_arp/mem_reg_i_295_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    21.331 r  u_arp/mem_reg_i_310/O
+                         net (fo=1, unplaced)         0.000    21.331    u_arp/mem_reg_i_310_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    21.864 r  u_arp/mem_reg_i_287/CO[3]
+                         net (fo=1, unplaced)         0.009    21.873    u_arp/mem_reg_i_287_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    21.990 r  u_arp/mem_reg_i_282/CO[3]
+                         net (fo=1, unplaced)         0.000    21.990    u_arp/mem_reg_i_282_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    22.107 r  u_arp/mem_reg_i_281/CO[3]
+                         net (fo=1, unplaced)         0.000    22.107    u_arp/mem_reg_i_281_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    22.388 r  u_arp/mem_reg_i_279/CO[0]
+                         net (fo=14, unplaced)        0.362    22.750    u_arp/mem_reg_i_279_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    23.117 r  u_arp/mem_reg_i_294/O
+                         net (fo=1, unplaced)         0.000    23.117    u_arp/mem_reg_i_294_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    23.650 r  u_arp/mem_reg_i_271/CO[3]
+                         net (fo=1, unplaced)         0.009    23.659    u_arp/mem_reg_i_271_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    23.776 r  u_arp/mem_reg_i_266/CO[3]
+                         net (fo=1, unplaced)         0.000    23.776    u_arp/mem_reg_i_266_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    23.893 r  u_arp/mem_reg_i_265/CO[3]
+                         net (fo=1, unplaced)         0.000    23.893    u_arp/mem_reg_i_265_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    24.174 r  u_arp/mem_reg_i_263/CO[0]
+                         net (fo=14, unplaced)        0.362    24.536    u_arp/mem_reg_i_263_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    24.903 r  u_arp/mem_reg_i_278/O
+                         net (fo=1, unplaced)         0.000    24.903    u_arp/mem_reg_i_278_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    25.436 r  u_arp/mem_reg_i_255/CO[3]
+                         net (fo=1, unplaced)         0.009    25.445    u_arp/mem_reg_i_255_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    25.562 r  u_arp/mem_reg_i_250/CO[3]
+                         net (fo=1, unplaced)         0.000    25.562    u_arp/mem_reg_i_250_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    25.679 r  u_arp/mem_reg_i_249/CO[3]
+                         net (fo=1, unplaced)         0.000    25.679    u_arp/mem_reg_i_249_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    25.960 r  u_arp/mem_reg_i_247/CO[0]
+                         net (fo=14, unplaced)        0.362    26.322    u_arp/mem_reg_i_247_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    26.689 r  u_arp/mem_reg_i_262/O
+                         net (fo=1, unplaced)         0.000    26.689    u_arp/mem_reg_i_262_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    27.222 r  u_arp/mem_reg_i_239/CO[3]
+                         net (fo=1, unplaced)         0.009    27.231    u_arp/mem_reg_i_239_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    27.348 r  u_arp/mem_reg_i_234/CO[3]
+                         net (fo=1, unplaced)         0.000    27.348    u_arp/mem_reg_i_234_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    27.465 r  u_arp/mem_reg_i_233/CO[3]
+                         net (fo=1, unplaced)         0.000    27.465    u_arp/mem_reg_i_233_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    27.746 r  u_arp/mem_reg_i_231/CO[0]
+                         net (fo=14, unplaced)        0.362    28.108    u_arp/mem_reg_i_231_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    28.475 r  u_arp/mem_reg_i_246/O
+                         net (fo=1, unplaced)         0.000    28.475    u_arp/mem_reg_i_246_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    29.008 r  u_arp/mem_reg_i_223/CO[3]
+                         net (fo=1, unplaced)         0.009    29.017    u_arp/mem_reg_i_223_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    29.134 r  u_arp/mem_reg_i_218/CO[3]
+                         net (fo=1, unplaced)         0.000    29.134    u_arp/mem_reg_i_218_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    29.251 r  u_arp/mem_reg_i_217/CO[3]
+                         net (fo=1, unplaced)         0.000    29.251    u_arp/mem_reg_i_217_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    29.532 r  u_arp/mem_reg_i_215/CO[0]
+                         net (fo=14, unplaced)        0.362    29.894    u_arp/mem_reg_i_215_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    30.261 r  u_arp/mem_reg_i_230/O
+                         net (fo=1, unplaced)         0.000    30.261    u_arp/mem_reg_i_230_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    30.794 r  u_arp/mem_reg_i_207/CO[3]
+                         net (fo=1, unplaced)         0.009    30.803    u_arp/mem_reg_i_207_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    30.920 r  u_arp/mem_reg_i_202/CO[3]
+                         net (fo=1, unplaced)         0.000    30.920    u_arp/mem_reg_i_202_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    31.037 r  u_arp/mem_reg_i_201/CO[3]
+                         net (fo=1, unplaced)         0.000    31.037    u_arp/mem_reg_i_201_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    31.318 r  u_arp/mem_reg_i_199/CO[0]
+                         net (fo=14, unplaced)        0.362    31.680    u_arp/mem_reg_i_199_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    32.047 r  u_arp/mem_reg_i_214/O
+                         net (fo=1, unplaced)         0.000    32.047    u_arp/mem_reg_i_214_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    32.580 r  u_arp/mem_reg_i_191/CO[3]
+                         net (fo=1, unplaced)         0.009    32.589    u_arp/mem_reg_i_191_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    32.706 r  u_arp/mem_reg_i_186/CO[3]
+                         net (fo=1, unplaced)         0.000    32.706    u_arp/mem_reg_i_186_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    32.823 r  u_arp/mem_reg_i_185/CO[3]
+                         net (fo=1, unplaced)         0.000    32.823    u_arp/mem_reg_i_185_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    33.104 r  u_arp/mem_reg_i_183/CO[0]
+                         net (fo=14, unplaced)        0.362    33.466    u_arp/mem_reg_i_183_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    33.833 r  u_arp/mem_reg_i_198/O
+                         net (fo=1, unplaced)         0.000    33.833    u_arp/mem_reg_i_198_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    34.366 r  u_arp/mem_reg_i_175/CO[3]
+                         net (fo=1, unplaced)         0.009    34.375    u_arp/mem_reg_i_175_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    34.492 r  u_arp/mem_reg_i_170/CO[3]
+                         net (fo=1, unplaced)         0.000    34.492    u_arp/mem_reg_i_170_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    34.609 r  u_arp/mem_reg_i_169/CO[3]
+                         net (fo=1, unplaced)         0.000    34.609    u_arp/mem_reg_i_169_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    34.890 r  u_arp/mem_reg_i_167/CO[0]
+                         net (fo=14, unplaced)        0.362    35.252    u_arp/mem_reg_i_167_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    35.619 r  u_arp/mem_reg_i_182/O
+                         net (fo=1, unplaced)         0.000    35.619    u_arp/mem_reg_i_182_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    36.152 r  u_arp/mem_reg_i_159/CO[3]
+                         net (fo=1, unplaced)         0.009    36.161    u_arp/mem_reg_i_159_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    36.278 r  u_arp/mem_reg_i_154/CO[3]
+                         net (fo=1, unplaced)         0.000    36.278    u_arp/mem_reg_i_154_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    36.395 r  u_arp/mem_reg_i_153/CO[3]
+                         net (fo=1, unplaced)         0.000    36.395    u_arp/mem_reg_i_153_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    36.676 r  u_arp/mem_reg_i_151/CO[0]
+                         net (fo=14, unplaced)        0.362    37.038    u_arp/mem_reg_i_151_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    37.405 r  u_arp/mem_reg_i_166/O
+                         net (fo=1, unplaced)         0.000    37.405    u_arp/mem_reg_i_166_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    37.938 r  u_arp/mem_reg_i_143/CO[3]
+                         net (fo=1, unplaced)         0.009    37.947    u_arp/mem_reg_i_143_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    38.064 r  u_arp/mem_reg_i_138/CO[3]
+                         net (fo=1, unplaced)         0.000    38.064    u_arp/mem_reg_i_138_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    38.181 r  u_arp/mem_reg_i_137/CO[3]
+                         net (fo=1, unplaced)         0.000    38.181    u_arp/mem_reg_i_137_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    38.462 r  u_arp/mem_reg_i_135/CO[0]
+                         net (fo=14, unplaced)        0.362    38.824    u_arp/mem_reg_i_135_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    39.191 r  u_arp/mem_reg_i_150/O
+                         net (fo=1, unplaced)         0.000    39.191    u_arp/mem_reg_i_150_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    39.724 r  u_arp/mem_reg_i_127/CO[3]
+                         net (fo=1, unplaced)         0.009    39.733    u_arp/mem_reg_i_127_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    39.850 r  u_arp/mem_reg_i_122/CO[3]
+                         net (fo=1, unplaced)         0.000    39.850    u_arp/mem_reg_i_122_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    39.967 r  u_arp/mem_reg_i_121/CO[3]
+                         net (fo=1, unplaced)         0.000    39.967    u_arp/mem_reg_i_121_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    40.248 r  u_arp/mem_reg_i_119/CO[0]
+                         net (fo=14, unplaced)        0.362    40.610    u_arp/mem_reg_i_119_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    40.977 r  u_arp/mem_reg_i_134/O
+                         net (fo=1, unplaced)         0.000    40.977    u_arp/mem_reg_i_134_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    41.510 r  u_arp/mem_reg_i_111/CO[3]
+                         net (fo=1, unplaced)         0.009    41.519    u_arp/mem_reg_i_111_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    41.636 r  u_arp/mem_reg_i_106/CO[3]
+                         net (fo=1, unplaced)         0.000    41.636    u_arp/mem_reg_i_106_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    41.753 r  u_arp/mem_reg_i_105/CO[3]
+                         net (fo=1, unplaced)         0.000    41.753    u_arp/mem_reg_i_105_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    42.034 r  u_arp/mem_reg_i_103/CO[0]
+                         net (fo=14, unplaced)        0.362    42.396    u_arp/mem_reg_i_103_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    42.763 r  u_arp/mem_reg_i_118/O
+                         net (fo=1, unplaced)         0.000    42.763    u_arp/mem_reg_i_118_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    43.296 r  u_arp/mem_reg_i_95/CO[3]
+                         net (fo=1, unplaced)         0.009    43.305    u_arp/mem_reg_i_95_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    43.422 r  u_arp/mem_reg_i_90/CO[3]
+                         net (fo=1, unplaced)         0.000    43.422    u_arp/mem_reg_i_90_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    43.539 r  u_arp/mem_reg_i_89/CO[3]
+                         net (fo=1, unplaced)         0.000    43.539    u_arp/mem_reg_i_89_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    43.820 r  u_arp/mem_reg_i_87/CO[0]
+                         net (fo=14, unplaced)        0.362    44.182    u_arp/mem_reg_i_87_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    44.549 r  u_arp/mem_reg_i_102/O
+                         net (fo=1, unplaced)         0.000    44.549    u_arp/mem_reg_i_102_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    45.082 r  u_arp/mem_reg_i_79/CO[3]
+                         net (fo=1, unplaced)         0.009    45.091    u_arp/mem_reg_i_79_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    45.208 r  u_arp/mem_reg_i_74/CO[3]
+                         net (fo=1, unplaced)         0.000    45.208    u_arp/mem_reg_i_74_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    45.325 r  u_arp/mem_reg_i_73/CO[3]
+                         net (fo=1, unplaced)         0.000    45.325    u_arp/mem_reg_i_73_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    45.606 r  u_arp/mem_reg_i_71/CO[0]
+                         net (fo=14, unplaced)        0.362    45.968    u_arp/mem_reg_i_71_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    46.335 r  u_arp/mem_reg_i_86/O
+                         net (fo=1, unplaced)         0.000    46.335    u_arp/mem_reg_i_86_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    46.868 r  u_arp/mem_reg_i_63/CO[3]
+                         net (fo=1, unplaced)         0.009    46.877    u_arp/mem_reg_i_63_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    46.994 r  u_arp/mem_reg_i_58/CO[3]
+                         net (fo=1, unplaced)         0.000    46.994    u_arp/mem_reg_i_58_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    47.111 r  u_arp/mem_reg_i_57/CO[3]
+                         net (fo=1, unplaced)         0.000    47.111    u_arp/mem_reg_i_57_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    47.392 r  u_arp/mem_reg_i_55/CO[0]
+                         net (fo=14, unplaced)        0.362    47.754    u_arp/mem_reg_i_55_n_3
+                         LUT3 (Prop_lut3_I0_O)        0.367    48.121 r  u_arp/mem_reg_i_70/O
+                         net (fo=1, unplaced)         0.000    48.121    u_arp/mem_reg_i_70_n_0
+                         CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    48.654 r  u_arp/mem_reg_i_46/CO[3]
+                         net (fo=1, unplaced)         0.009    48.663    u_arp/mem_reg_i_46_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    48.780 r  u_arp/mem_reg_i_38/CO[3]
+                         net (fo=1, unplaced)         0.000    48.780    u_arp/mem_reg_i_38_n_0
+                         CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    48.897 r  u_arp/mem_reg_i_37/CO[3]
+                         net (fo=1, unplaced)         0.000    48.897    u_arp/mem_reg_i_37_n_0
+                         CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.281    49.178 r  u_arp/mem_reg_i_35/CO[0]
+                         net (fo=14, unplaced)        0.385    49.563    u_arp/mem_reg_i_35_n_3
+                         CARRY4 (Prop_carry4_CYINIT_O[1])
+                                                      0.887    50.450 r  u_arp/mem_reg_i_34/O[1]
+                         net (fo=5, unplaced)         0.639    51.089    u_arp/mem_reg_i_34_n_6
+                         LUT4 (Prop_lut4_I0_O)        0.306    51.395 r  u_arp/mem_reg_i_51/O
+                         net (fo=1, unplaced)         0.419    51.814    u_arp/mem_reg_i_51_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    51.938 r  u_arp/mem_reg_i_31/O
+                         net (fo=5, unplaced)         0.477    52.415    u_arp/mem_reg_i_31_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    52.539 r  u_arp/mem_reg_i_43/O
+                         net (fo=1, unplaced)         0.449    52.988    u_arp/mem_reg_i_43_n_0
+                         LUT5 (Prop_lut5_I0_O)        0.124    53.112 r  u_arp/mem_reg_i_27/O
+                         net (fo=3, unplaced)         0.467    53.579    u_arp/mem_reg_i_27_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.124    53.703 r  u_arp/mem_reg_i_25/O
+                         net (fo=1, unplaced)         0.449    54.152    u_arp/mem_reg_i_25_n_0
+                         LUT3 (Prop_lut3_I1_O)        0.124    54.276 r  u_arp/mem_reg_i_13/O
+                         net (fo=1, unplaced)         0.449    54.725    u_arp/mem_reg_i_13_n_0
+                         LUT6 (Prop_lut6_I4_O)        0.124    54.849 r  u_arp/mem_reg_i_2/O
+                         net (fo=1, unplaced)         0.800    55.649    u_sys_ram/ADDRBWRADDR[10]
+                         RAMB18E1                                     r  u_sys_ram/mem_reg/ADDRBWRADDR[13]
+  -------------------------------------------------------------------    -------------------
+
+                         (clock sys_clk rise edge)   10.000    10.000 r  
+                                                      0.000    10.000 r  clk (IN)
+                         net (fo=0)                   0.000    10.000    clk
+                         IBUF (Prop_ibuf_I_O)         0.840    10.840 r  clk_IBUF_inst/O
+                         net (fo=1, unplaced)         0.760    11.599    clk_IBUF
+                         BUFG (Prop_bufg_I_O)         0.091    11.690 r  clk_IBUF_BUFG_inst/O
+                         net (fo=62, unplaced)        0.439    12.129    u_sys_ram/clk_IBUF_BUFG
+                         RAMB18E1                                     r  u_sys_ram/mem_reg/CLKBWRCLK
+                         clock pessimism              0.000    12.129    
+                         clock uncertainty           -0.035    12.094    
+                         RAMB18E1 (Setup_ramb18e1_CLKBWRCLK_ADDRBWRADDR[13])
+                                                     -0.566    11.528    u_sys_ram/mem_reg
+  -------------------------------------------------------------------
+                         required time                         11.528    
+                         arrival time                         -55.649    
+  -------------------------------------------------------------------
+                         slack                                -44.121    
+
+
+
+
+
+Min Delay Paths
+--------------------------------------------------------------------------------------
+Slack (VIOLATED) :        -0.794ns  (arrival time - required time)
+  Source:                 in_couple[0]
+                            (input port clocked by sys_clk  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Destination:            u_sys_ram/mem_reg/DIADI[0]
+                            (rising edge-triggered cell RAMB18E1 clocked by sys_clk  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Path Group:             sys_clk
+  Path Type:              Hold (Min at Slow Process Corner)
+  Requirement:            0.000ns  (sys_clk rise@0.000ns - sys_clk rise@0.000ns)
+  Data Path Delay:        1.599ns  (logic 0.840ns (52.497%)  route 0.760ns (47.503%))
+  Logic Levels:           1  (IBUF=1)
+  Input Delay:            0.500ns
+  Clock Path Skew:        2.453ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    2.453ns
+    Source Clock Delay      (SCD):    0.000ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock sys_clk rise edge)    0.000     0.000 r  
+                         input delay                  0.500     0.500    
+                                                      0.000     0.500 r  in_couple[0] (IN)
+                         net (fo=0)                   0.000     0.500    in_couple[0]
+                         IBUF (Prop_ibuf_I_O)         0.840     1.340 r  in_couple_IBUF[0]_inst/O
+                         net (fo=2, unplaced)         0.760     2.099    u_sys_ram/DIADI[0]
+                         RAMB18E1                                     r  u_sys_ram/mem_reg/DIADI[0]
+  -------------------------------------------------------------------    -------------------
+
+                         (clock sys_clk rise edge)    0.000     0.000 r  
+                                                      0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+                         IBUF (Prop_ibuf_I_O)         0.973     0.973 r  clk_IBUF_inst/O
+                         net (fo=1, unplaced)         0.800     1.773    clk_IBUF
+                         BUFG (Prop_bufg_I_O)         0.096     1.869 r  clk_IBUF_BUFG_inst/O
+                         net (fo=62, unplaced)        0.584     2.453    u_sys_ram/clk_IBUF_BUFG
+                         RAMB18E1                                     r  u_sys_ram/mem_reg/CLKARDCLK
+                         clock pessimism              0.000     2.453    
+                         clock uncertainty            0.035     2.488    
+                         RAMB18E1 (Hold_ramb18e1_CLKARDCLK_DIADI[0])
+                                                      0.405     2.893    u_sys_ram/mem_reg
+  -------------------------------------------------------------------
+                         required time                         -2.893    
+                         arrival time                           2.099    
+  -------------------------------------------------------------------
+                         slack                                 -0.794    
+
+
+
+
+
+Pulse Width Checks
+--------------------------------------------------------------------------------------
+Clock Name:         sys_clk
+Waveform(ns):       { 0.000 5.000 }
+Period(ns):         10.000
+Sources:            { clk }
+
+Check Type        Corner  Lib Pin             Reference Pin  Required(ns)  Actual(ns)  Slack(ns)  Location  Pin
+Min Period        n/a     RAMB18E1/CLKARDCLK  n/a            2.944         10.000      7.056                par1_ram/mem_reg/CLKARDCLK
+Low Pulse Width   Slow    FDRE/C              n/a            0.500         5.000       4.500                FSM_sequential_state_reg_reg[0]/C
+High Pulse Width  Slow    FDRE/C              n/a            0.500         5.000       4.500                FSM_sequential_state_reg_reg[0]/C
+
+
+
