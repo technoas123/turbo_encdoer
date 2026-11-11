@@ -212,6 +212,9 @@ module turbo_encoder_top #(
                 end
             end
 
+            // ==================================================================
+            // PROBE PASS 1: encode N couples from state 0 to find s_final_enc1
+            // ==================================================================
             STATE_CIRC_STATE1: begin
                 if (enc_cnt == 0) begin
                     enc_load_init <= 1; enc_s_init <= 0; sys_addr_b <= 0; enc_cnt <= 1;
@@ -221,6 +224,13 @@ module turbo_encoder_top #(
                     enc_enable <= 1;
                     if (enc_cnt <= active_N) sys_addr_b <= enc_cnt - 1;
                     enc_cnt <= enc_cnt + 1;
+                // ----------------------------------------------------------
+                // FIX A: wait one idle cycle for encoder state_reg to settle
+                //        after the last enable (enc_cnt == active_N + 1).
+                //        Without this, s_final captures S_{N-1} not S_N.
+                // ----------------------------------------------------------
+                end else if (enc_cnt == active_N + 2) begin
+                    enc_cnt <= enc_cnt + 1;
                 end else begin
                     s_final_enc1 <= enc_s_final;
                     enc_cnt <= 0;
@@ -228,6 +238,9 @@ module turbo_encoder_top #(
                 end
             end
 
+            // ==================================================================
+            // ACTUAL ENCODE PASS 1: from circular state s0_enc1
+            // ==================================================================
             STATE_ENCODE1: begin
                 if (enc_cnt == 0) begin
                     enc_load_init <= 1; enc_s_init <= s0_enc1; sys_addr_b <= 0; enc_cnt <= 1;
@@ -254,6 +267,9 @@ module turbo_encoder_top #(
                 state   <= STATE_CIRC_STATE2;
             end
 
+            // ==================================================================
+            // PROBE PASS 2: encode N interleaved couples from state 0
+            // ==================================================================
             STATE_CIRC_STATE2: begin
                 if (enc_cnt == 0) begin
                     enc_load_init <= 1; enc_s_init <= 0; enc_cnt <= 1;
@@ -261,7 +277,19 @@ module turbo_encoder_top #(
                     enc_cnt <= 2;
                 end else if (enc_cnt <= active_N + 1) begin
                     enc_enable <= 1;
-                    if (enc_cnt >= 3 && enc_cnt <= active_N) arp_step <= 1;   // <-- FIX
+                    // ------------------------------------------------------
+                    // FIX B: arp_step must start at enc_cnt == 2 (not 3).
+                    //        Pass 2 uses combinational BRAM read (sys_rd_comb)
+                    //        so address and data are in the same cycle.
+                    //        Starting at 3 causes π(0) to be read twice and
+                    //        π(N-1) to be skipped.
+                    // ------------------------------------------------------
+                    if (enc_cnt >= 2 && enc_cnt <= active_N) arp_step <= 1;
+                    enc_cnt <= enc_cnt + 1;
+                // ----------------------------------------------------------
+                // FIX A: same idle cycle as CIRC_STATE1
+                // ----------------------------------------------------------
+                end else if (enc_cnt == active_N + 2) begin
                     enc_cnt <= enc_cnt + 1;
                 end else begin
                     s_final_enc2 <= enc_s_final;
@@ -276,6 +304,9 @@ module turbo_encoder_top #(
                 state   <= STATE_ENCODE2;
             end
 
+            // ==================================================================
+            // ACTUAL ENCODE PASS 2: from circular state s0_enc2
+            // ==================================================================
             STATE_ENCODE2: begin
                 if (enc_cnt == 0) begin
                     enc_load_init <= 1; enc_s_init <= s0_enc2; enc_cnt <= 1;
@@ -284,7 +315,10 @@ module turbo_encoder_top #(
                 end else if (enc_cnt <= active_N + 2) begin
                     if (enc_cnt <= active_N + 1) begin
                         enc_enable <= 1;
-                        if (enc_cnt >= 3 && enc_cnt <= active_N) arp_step <= 1;   // <-- FIX
+                        // --------------------------------------------------
+                        // FIX B: same arp_step fix as CIRC_STATE2
+                        // --------------------------------------------------
+                        if (enc_cnt >= 2 && enc_cnt <= active_N) arp_step <= 1;
                     end
                     if (enc_cnt >= 3) begin
                         par2_addr_a <= enc_cnt - 3;
