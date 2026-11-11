@@ -1,33 +1,13 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: Ahammed salahudeen N Y 
-// 
-// Create Date: 09/28/2026 01:26:06 PM
-// Design Name: 
-// Module Name: circular_state_rom
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
 
 module circular_state_rom(
-    input wire [3:0] r,
-    input wire [3:0] last_state,
-    output reg [3:0] circ_state
-    );
-    
+    input  wire [3:0] r,
+    input  wire [3:0] last_state,
+    output reg  [3:0] circ_state
+);
+
     reg [63:0] raw_data;
-    
+
     always @(*) begin
         case (r)
             4'd1:  raw_data = 64'h5b68_2c1f_a497_d3e0;
@@ -45,7 +25,8 @@ module circular_state_rom(
             4'd13: raw_data = 64'h6c93_827d_b14e_5fa0;
             4'd14: raw_data = 64'ha5b4_9687_d2c3_e1f0;
             default: raw_data = 64'd0;
-        endcase      
-        circ_state = raw_data[last_state * 4 +: 4]; 
+        endcase
+        circ_state = raw_data[last_state * 4 +: 4];
     end
+
 endmodule

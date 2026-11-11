@@ -1,493 +1,372 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Module Name: turbo_encoder_top
-// Description: DVB-RCS2 Turbo Encoder with Xilinx AXI-Stream Data FIFOs.
-//              Updated with 32-bit right-shift input extraction (Task 2).
-//////////////////////////////////////////////////////////////////////////////////
 
 module turbo_encoder_top #(
-    parameter ADDR_WIDTH = 6
+    parameter MAX_N = 2396
 )(
     input  wire        clk,
     input  wire        rst_n,
-
-    // ==========================================
-    // 1. AXI-STREAM INPUT (Directly to Xilinx Input FIFO)
-    // ==========================================
+    input  wire [5:0]  cfg_waveform_id,
+    input  wire        cfg_valid,
     input  wire [31:0] s_axis_tdata,
     input  wire        s_axis_tvalid,
+    output reg         s_axis_tready,
     input  wire        s_axis_tlast,
-    output wire        s_axis_tready,
-
-    // ==========================================
-    // 2. AXI-STREAM OUTPUT (Directly from Xilinx Output FIFO)
-    // ==========================================
-    output wire [31:0] m_axis_tdata,
-    output wire        m_axis_tvalid,
-    output wire        m_axis_tlast,
-    input  wire        m_axis_tready
+    output reg  [31:0] m_axis_tdata,
+    output reg         m_axis_tvalid,
+    input  wire        m_axis_tready,
+    output reg         m_axis_tlast
 );
 
-    // ------------------------------------------------------------------
-    // Constants & State Definitions
-    // ------------------------------------------------------------------
     localparam STATE_IDLE         = 4'd0;
-    localparam STATE_LOAD         = 4'd12; // NEW: Shift stream into sys_ram
-    localparam STATE_LOAD_RELOAD  = 4'd13; // NEW: Handle FIFO stall mid-frame
-    localparam STATE_PASS1        = 4'd1;  // UPDATED: Read from sys_ram
-    localparam STATE_PASS1_TAIL   = 4'd2;
-    localparam STATE_PASS2        = 4'd3;
-    localparam STATE_PASS2_TAIL   = 4'd4;
-    localparam STATE_PASS3        = 4'd5;
-    localparam STATE_PASS3_TAIL   = 4'd6;
-    localparam STATE_PASS3_TAIL2  = 4'd11;
-    localparam STATE_PASS4        = 4'd7;
-    localparam STATE_PASS4_TAIL   = 4'd8;
-    localparam STATE_READOUT      = 4'd9;
-    localparam STATE_READOUT_TAIL = 4'd10;
+    localparam STATE_LOAD         = 4'd1;
+    localparam STATE_CIRC_STATE1  = 4'd2;
+    localparam STATE_ENCODE1      = 4'd3;
+    localparam STATE_ARP_RESET2A  = 4'd4;
+    localparam STATE_CIRC_STATE2  = 4'd5;
+    localparam STATE_ARP_RESET2B  = 4'd6;
+    localparam STATE_ENCODE2      = 4'd7;
+    localparam STATE_UNLOAD       = 4'd8;
 
-    localparam [ADDR_WIDTH-1:0] N_VAL     = 6'd48;
-    localparam [ADDR_WIDTH-1:0] N_MINUS_1 = 6'd47;
-    localparam [3:0]            R_MOD15   = 4'd3;
+    reg [3:0]  state;
+    reg [11:0] enc_cnt;
 
-    localparam FIFO_DEPTH      = 16;
-    localparam WORDS_PER_FRAME = 9;
+    wire [11:0] arp_interleaved_addr;
+    wire        arp_swap_unused;
 
-    // ------------------------------------------------------------------
-    // FSM Internal Registers
-    // ------------------------------------------------------------------
-    reg [3:0]               state_reg;
-    reg [ADDR_WIDTH-1:0]    count;
-    reg [ADDR_WIDTH-1:0]    par_count;
-    reg                     pipe_valid;
-    reg                     arp_swap_q;
-    reg [3:0]               c1_reg, c2_reg;
-
-    // Shift Register Components
-    reg [31:0]              shift_reg;
-    reg [3:0]               word_bit_cnt;
-    reg                     couple_valid;
-
-    // ------------------------------------------------------------------
-    // INPUT FIFO WIRES (Unpacked from Xilinx IP Master side)
-    // ------------------------------------------------------------------
-    wire [31:0] fifo_m_axis_tdata;
-    wire        fifo_m_axis_tvalid;
-    wire        fifo_m_axis_tlast;
-    wire        fifo_m_axis_tready;
-
-    // ------------------------------------------------------------------
-    // OUTPUT FIFO WIRES & ROOM GUARD
-    // ------------------------------------------------------------------
-    wire [31:0] out_fifo_s_axis_tdata;
-    wire        out_fifo_s_axis_tvalid;
-    wire        out_fifo_s_axis_tlast;
-    wire        out_fifo_s_axis_tready;
-    wire [31:0] out_fifo_count;
-
-    wire output_done;
-    wire out_fifo_room = (out_fifo_count <= (FIFO_DEPTH - WORDS_PER_FRAME));
-
-    wire [4:0] in_fifo_count  = 5'd0;
-    wire [4:0] out_fifo_count_tb = out_fifo_count[4:0];
-
-    // ------------------------------------------------------------------
-    // 1. XILINX INPUT FIFO INSTANTIATION (RRC_Chain_AXI Pattern)
-    // ------------------------------------------------------------------
-    axis_data_fifo_0 U_INPUT_FIFO (
-        .s_axis_aclk    (clk),
-        .s_axis_aresetn (rst_n),
-
-        .s_axis_tdata   (s_axis_tdata),
-        .s_axis_tvalid  (s_axis_tvalid),
-        .s_axis_tlast   (s_axis_tlast),
-        .s_axis_tready  (s_axis_tready),
-
-        .m_axis_tdata   (fifo_m_axis_tdata),
-        .m_axis_tvalid  (fifo_m_axis_tvalid),
-        .m_axis_tlast   (fifo_m_axis_tlast),
-        .m_axis_tready  (fifo_m_axis_tready)
+    wire [11:0] rom_N, rom_P, rom_Q0, rom_Q1, rom_Q2, rom_Q3;
+    profile_lookup_rom profile_rom_inst (
+        .waveform_id (cfg_waveform_id),
+        .cfg_N(rom_N), .cfg_P(rom_P),
+        .cfg_Q0(rom_Q0), .cfg_Q1(rom_Q1), .cfg_Q2(rom_Q2), .cfg_Q3(rom_Q3)
     );
 
-    // ------------------------------------------------------------------
-    // Input Shift Extraction Logic
-    // ------------------------------------------------------------------
-    wire [1:0] current_couple = shift_reg[1:0]; // Combinational tap (0 LUTs)
+    reg [11:0] active_N_reg, active_P_reg, active_Q0_reg, active_Q1_reg, active_Q2_reg, active_Q3_reg;
+    wire [11:0] active_N  = active_N_reg;
+    wire [11:0] active_P  = active_P_reg;
+    wire [11:0] active_Q0 = active_Q0_reg;
+    wire [11:0] active_Q1 = active_Q1_reg;
+    wire [11:0] active_Q2 = active_Q2_reg;
+    wire [11:0] active_Q3 = active_Q3_reg;
 
-    // AXI handshake logic for the Shift Register
-    assign fifo_m_axis_tready = 
-        (state_reg == STATE_IDLE && output_done && out_fifo_room) ||
-        (state_reg == STATE_LOAD && word_bit_cnt == 4'd15 && count < N_MINUS_1) ||
-        (state_reg == STATE_LOAD_RELOAD);
+    reg  [11:0] sys_addr_a;   wire [1:0] sys_wr_data;   reg        sys_we;
+    reg  [11:0] sys_addr_b;   wire [1:0] sys_rd_data;  wire [1:0] sys_rd_comb;
 
-    // ------------------------------------------------------------------
-    // Sub-module Instantiations (RAMs, Encoder, ARP)
-    // ------------------------------------------------------------------
-    reg                     sys_we;
-    reg  [ADDR_WIDTH-1:0]   sys_waddr, sys_raddr;
-    reg  [1:0]              sys_din;
-    wire [1:0]              sys_dout;
+    wire is_pass2 = (state == STATE_CIRC_STATE2) || (state == STATE_ENCODE2);
+    wire [11:0] sys_raddr = is_pass2 ? arp_interleaved_addr : sys_addr_b;
 
-    ram_sdp #(.DATA_WIDTH(2), .ADDR_WIDTH(ADDR_WIDTH)) u_sys_ram (
-        .clk(clk), .we(sys_we), .waddr(sys_waddr), .din(sys_din),
-        .raddr(sys_raddr), .dout(sys_dout)
+    ram_sdp #(.DATA_WIDTH(2), .ADDR_WIDTH(12)) sys_ram (
+        .clk(clk), .we(sys_we), .waddr(sys_addr_a), .din(sys_wr_data),
+        .raddr(sys_raddr), .dout(sys_rd_data), .dout_comb(sys_rd_comb)
     );
 
-    reg                     par1_we;
-    reg  [ADDR_WIDTH-1:0]   par1_waddr, par1_raddr;
-    reg  [1:0]              par1_din;
-    wire [1:0]              par1_dout;
-
-    ram_sdp #(.DATA_WIDTH(2), .ADDR_WIDTH(ADDR_WIDTH)) par1_ram (
-        .clk(clk), .we(par1_we), .waddr(par1_waddr), .din(par1_din),
-        .raddr(par1_raddr), .dout(par1_dout)
+    reg  [11:0] par1_addr_a;  wire [1:0] par1_wr_data;  reg        par1_we;
+    reg  [11:0] par1_addr_b;  wire [1:0] par1_rd_data; wire [1:0] par1_rd_comb;
+    ram_sdp #(.DATA_WIDTH(2), .ADDR_WIDTH(12)) par1_ram (
+        .clk(clk), .we(par1_we), .waddr(par1_addr_a), .din(par1_wr_data),
+        .raddr(par1_addr_b), .dout(par1_rd_data), .dout_comb(par1_rd_comb)
     );
 
-    reg                     par2_we;
-    reg  [ADDR_WIDTH-1:0]   par2_waddr, par2_raddr;
-    reg  [1:0]              par2_din;
-    wire [1:0]              par2_dout;
-
-    ram_sdp #(.DATA_WIDTH(2), .ADDR_WIDTH(ADDR_WIDTH)) par2_ram (
-        .clk(clk), .we(par2_we), .waddr(par2_waddr), .din(par2_din),
-        .raddr(par2_raddr), .dout(par2_dout)
+    reg  [11:0] par2_addr_a;  wire [1:0] par2_wr_data;  reg        par2_we;
+    reg  [11:0] par2_addr_b;  wire [1:0] par2_rd_data; wire [1:0] par2_rd_comb;
+    ram_sdp #(.DATA_WIDTH(2), .ADDR_WIDTH(12)) par2_ram (
+        .clk(clk), .we(par2_we), .waddr(par2_addr_a), .din(par2_wr_data),
+        .raddr(par2_addr_b), .dout(par2_rd_data), .dout_comb(par2_rd_comb)
     );
 
-    reg         ce_load_init, ce_enable, ce_a, ce_b;
-    reg  [3:0]  ce_init_state;
-    wire        ce_y, ce_w;
-    wire [3:0]  ce_state_out;
+    reg arp_start, arp_step;
 
-    constituent_encoder u_ce (
+    arp_interleaver arp_inst (
+        .clk(clk), .rst_n(rst_n), .start(arp_start), .step(arp_step),
+        .cfg_N(active_N), .cfg_P(active_P),
+        .cfg_Q0(active_Q0), .cfg_Q1(active_Q1), .cfg_Q2(active_Q2), .cfg_Q3(active_Q3),
+        .int_addr(arp_interleaved_addr), .swap_bits(arp_swap_unused)
+    );
+
+    reg        enc_load_init;
+    reg  [3:0] enc_s_init;
+    reg        enc_enable;
+    wire [1:0] enc_couple_in;
+    wire       enc_y, enc_w;
+    wire [3:0] enc_s_final;
+
+    wire [1:0] enc_data = is_pass2 ? sys_rd_comb : sys_rd_data;
+    wire       enc_swap = is_pass2 ? ~enc_cnt[0] : 1'b0;
+
+    assign enc_couple_in = is_pass2
+                           ? (enc_swap ? {enc_data[0], enc_data[1]} : enc_data)
+                           : enc_data;
+
+    constituent_encoder rsc_enc (
         .clk(clk), .rst_n(rst_n),
-        .load_init(ce_load_init), .init_state(ce_init_state),
-        .enable(ce_enable), .a(ce_a), .b(ce_b),
-        .y(ce_y), .w(ce_w), .state_out(ce_state_out)
+        .load_init(enc_load_init), .init_state(enc_s_init), .enable(enc_enable),
+        .a(enc_couple_in[1]), .b(enc_couple_in[0]),
+        .y(enc_y), .w(enc_w), .state_out(enc_s_final)
     );
 
-    wire [3:0] rom_circ_state;
-    circular_state_rom u_circ_rom (
-        .r(R_MOD15), .last_state(ce_state_out), .circ_state(rom_circ_state)
-    );
+    reg enc_y_d1, enc_w_d1;
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n) begin enc_y_d1 <= 1'b0; enc_w_d1 <= 1'b0; end
+        else        begin enc_y_d1 <= enc_y; enc_w_d1 <= enc_w; end
 
-    reg         arp_start, arp_enable;
-    wire [ADDR_WIDTH-1:0] arp_int_addr;
-    wire        arp_swap_bits, arp_valid, arp_done;
+    assign par1_wr_data = {enc_y_d1, enc_w_d1};
+    assign par2_wr_data = {enc_y_d1, enc_w_d1};
 
-    arp_interleaver #(.ADDR_WIDTH(ADDR_WIDTH), .N(48)) u_arp (
-        .clk(clk), .rst_n(rst_n),
-        .start(arp_start), .enable(arp_enable),
-        .int_addr(arp_int_addr), .swap_bits(arp_swap_bits),
-        .valid(arp_valid), .done(arp_done)
-    );
+    reg  [3:0] s_final_enc1, s_final_enc2;
+    wire [3:0] s0_enc1, s0_enc2;
+    wire [3:0] active_r = active_N % 15;
 
-    // ------------------------------------------------------------------
-    // Core Output Packer Logic
-    // ------------------------------------------------------------------
-    reg         sym_valid;
-    reg  [5:0]  sym_data;
-    reg  [63:0] out_acc;
-    reg  [5:0]  out_acc_bits;
-    reg  [3:0]  out_word_cnt;
+    circular_state_rom circ_rom_1 (.r(active_r), .last_state(s_final_enc1), .circ_state(s0_enc1));
+    circular_state_rom circ_rom_2 (.r(active_r), .last_state(s_final_enc2), .circ_state(s0_enc2));
 
-    wire        push_sym      = sym_valid;
-    wire [63:0] acc_next      = push_sym ? ((out_acc << 6) | {58'd0, sym_data}) : out_acc;
-    wire [5:0]  acc_bits_next = push_sym ? (out_acc_bits + 6'd6) : out_acc_bits;
-    wire        emit_word     = (acc_bits_next >= 6'd32);
-    wire [31:0] emit_data     = acc_next[acc_bits_next - 1 -: 32];
-    wire        emit_last     = (out_word_cnt == (WORDS_PER_FRAME - 1));
+    reg  [31:0] shift_reg;
+    reg  [3:0]  bit_ptr;
+    reg  [11:0] in_count;
+    reg         load_wait_data;
 
-    assign output_done = (out_word_cnt == 4'd0) && (out_acc_bits == 6'd0) && !sym_valid;
+    wire [1:0] current_in_couple = shift_reg[1:0];
+    reg  [1:0] current_in_couple_d1;
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n) current_in_couple_d1 <= 2'b00;
+        else        current_in_couple_d1 <= current_in_couple;
+    assign sys_wr_data = current_in_couple_d1;
 
-    always @(posedge clk) begin
+    reg [2:0]  unload_stream;
+    reg [11:0] unload_idx;
+    reg        unload_pipe_valid;
+    reg        unload_started;
+
+    reg [5:0]  curr_data;
+    reg [5:0]  curr_bits;
+    reg [5:0]  n_left_comb;
+    reg [31:0] pack_reg;
+    reg [5:0]  pack_count;
+
+    always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            sym_valid    <= 1'b0;
-            sym_data     <= 6'd0;
-            out_acc      <= 64'd0;
-            out_acc_bits <= 6'd0;
-            out_word_cnt <= 4'd0;
-        end
-        else begin
-            sym_valid <= (state_reg == STATE_READOUT) && pipe_valid;
-            if ((state_reg == STATE_READOUT) && pipe_valid)
-                sym_data <= {sys_dout, par1_dout, par2_dout};
+            state <= STATE_IDLE;
+            enc_cnt <= 0;
+            s_axis_tready <= 1'b0;
+            m_axis_tvalid <= 1'b0;
+            m_axis_tlast  <= 1'b0;
+            m_axis_tdata  <= 32'd0;
+            sys_we <= 0; par1_we <= 0; par2_we <= 0;
+            sys_addr_a <= 0; sys_addr_b <= 0;
+            par1_addr_a <= 0; par1_addr_b <= 0;
+            par2_addr_a <= 0; par2_addr_b <= 0;
+            enc_load_init <= 0; enc_s_init <= 0; enc_enable <= 0;
+            arp_start <= 0; arp_step <= 0;
+            in_count <= 0; bit_ptr <= 0; shift_reg <= 0; load_wait_data <= 0;
+            unload_stream <= 0; unload_idx <= 0; unload_pipe_valid <= 0;
+            unload_started <= 0;
+            curr_data <= 0; curr_bits <= 0; n_left_comb <= 0;
+            pack_reg <= 0; pack_count <= 0;
+            s_final_enc1 <= 0; s_final_enc2 <= 0;
+            active_N_reg <= 0; active_P_reg <= 0;
+            active_Q0_reg <= 0; active_Q1_reg <= 0; active_Q2_reg <= 0; active_Q3_reg <= 0;
+        end else begin
+            sys_we <= 0; par1_we <= 0; par2_we <= 0;
+            arp_start <= 0; arp_step <= 0;
+            enc_load_init <= 0; enc_enable <= 0;
 
-            out_acc      <= acc_next;
-            out_acc_bits <= acc_bits_next;
-
-            if (emit_word) begin
-                out_acc_bits <= acc_bits_next - 6'd32;
-                out_word_cnt <= emit_last ? 4'd0 : (out_word_cnt + 1'b1);
+            if (m_axis_tvalid && m_axis_tready) begin
+                m_axis_tvalid <= 0;
+                m_axis_tlast  <= 0;
             end
-        end
-    end
 
-    // ------------------------------------------------------------------
-    // 2. XILINX OUTPUT FIFO INSTANTIATION
-    // ------------------------------------------------------------------
-    assign out_fifo_s_axis_tdata  = emit_data;
-    assign out_fifo_s_axis_tvalid = emit_word;
-    assign out_fifo_s_axis_tlast  = emit_last;
-
-    axis_data_fifo_1 U_OUTPUT_FIFO (
-        .s_axis_aclk        (clk),
-        .s_axis_aresetn     (rst_n),
-
-        .s_axis_tdata       (out_fifo_s_axis_tdata),
-        .s_axis_tvalid      (out_fifo_s_axis_tvalid),
-        .s_axis_tlast       (out_fifo_s_axis_tlast),
-        .s_axis_tready      (out_fifo_s_axis_tready),
-
-        .m_axis_tdata       (m_axis_tdata),
-        .m_axis_tvalid      (m_axis_tvalid),
-        .m_axis_tlast       (m_axis_tlast),
-        .m_axis_tready      (m_axis_tready),
-
-        .axis_rd_data_count (out_fifo_count)
-    );
-
-    // ------------------------------------------------------------------
-    // Core Encoder FSM & Muxes
-    // ------------------------------------------------------------------
-    always @(*) begin
-        // Encoder Input Muxing
-        case (state_reg)
-            STATE_PASS1, STATE_PASS2, STATE_PASS2_TAIL: begin
-                ce_enable = pipe_valid;
-                ce_a = sys_dout[1]; // Read from RAM now, not current_couple!
-                ce_b = sys_dout[0];
+            case (state)
+            STATE_IDLE: begin
+                s_axis_tready <= 1; in_count <= 0; bit_ptr <= 0; load_wait_data <= 0;
+                enc_cnt <= 0; unload_stream <= 0; unload_idx <= 0;
+                unload_started <= 0;
+                pack_count <= 0; pack_reg <= 0;
+                if (cfg_valid) begin
+                    active_N_reg <= rom_N; active_P_reg <= rom_P;
+                    active_Q0_reg <= rom_Q0; active_Q1_reg <= rom_Q1;
+                    active_Q2_reg <= rom_Q2; active_Q3_reg <= rom_Q3;
+                end
+                if (s_axis_tvalid && s_axis_tready) begin
+                    shift_reg <= s_axis_tdata; s_axis_tready <= 0;
+                    state <= STATE_LOAD;
+                end
             end
-            STATE_PASS3, STATE_PASS3_TAIL,
-            STATE_PASS4, STATE_PASS4_TAIL: begin
-                ce_enable = pipe_valid;
-                if (arp_swap_q) begin
-                    ce_a = sys_dout[0];
-                    ce_b = sys_dout[1];
+
+            STATE_LOAD: begin
+                if (load_wait_data) begin
+                    if (s_axis_tvalid) begin
+                        shift_reg <= s_axis_tdata; s_axis_tready <= 0;
+                        load_wait_data <= 0; bit_ptr <= 0;
+                    end
+                end else if (in_count < active_N) begin
+                    sys_addr_a <= in_count; sys_we <= 1; in_count <= in_count + 1;
+                    if (bit_ptr == 15) begin
+                        if (in_count + 1 < active_N) begin
+                            s_axis_tready <= 1; load_wait_data <= 1;
+                        end
+                    end else begin
+                        shift_reg <= {2'b00, shift_reg[31:2]};
+                        bit_ptr <= bit_ptr + 1;
+                    end
                 end else begin
-                    ce_a = sys_dout[1];
-                    ce_b = sys_dout[0];
+                    s_axis_tready <= 0; enc_cnt <= 0;
+                    state <= STATE_CIRC_STATE1;
                 end
             end
-            default: begin
-                ce_enable = 1'b0;
-                ce_a = 1'b0;
-                ce_b = 1'b0;
+
+            STATE_CIRC_STATE1: begin
+                if (enc_cnt == 0) begin
+                    enc_load_init <= 1; enc_s_init <= 0; sys_addr_b <= 0; enc_cnt <= 1;
+                end else if (enc_cnt == 1) begin
+                    sys_addr_b <= 0; enc_cnt <= 2;
+                end else if (enc_cnt <= active_N + 1) begin
+                    enc_enable <= 1;
+                    if (enc_cnt <= active_N) sys_addr_b <= enc_cnt - 1;
+                    enc_cnt <= enc_cnt + 1;
+                end else begin
+                    s_final_enc1 <= enc_s_final;
+                    enc_cnt <= 0;
+                    state <= STATE_ENCODE1;
+                end
             end
-        endcase
-    end
 
-    always @(*) begin
-        // Sys RAM write logic (Only active during LOAD state)
-        sys_we    = couple_valid;
-        sys_waddr = count;
-        sys_din   = current_couple;
+            STATE_ENCODE1: begin
+                if (enc_cnt == 0) begin
+                    enc_load_init <= 1; enc_s_init <= s0_enc1; sys_addr_b <= 0; enc_cnt <= 1;
+                end else if (enc_cnt == 1) begin
+                    sys_addr_b <= 0; enc_cnt <= 2;
+                end else if (enc_cnt <= active_N + 2) begin
+                    if (enc_cnt <= active_N + 1) begin
+                        enc_enable <= 1;
+                        if (enc_cnt <= active_N) sys_addr_b <= enc_cnt - 1;
+                    end
+                    if (enc_cnt >= 3) begin
+                        par1_addr_a <= enc_cnt - 3;
+                        par1_we     <= 1;
+                    end
+                    enc_cnt <= enc_cnt + 1;
+                end else begin
+                    arp_start <= 1; enc_cnt <= 0;
+                    state <= STATE_ARP_RESET2A;
+                end
+            end
 
-        // Sys RAM read logic
-        case (state_reg)
-            STATE_PASS1, STATE_PASS2, STATE_PASS2_TAIL,
-            STATE_READOUT, STATE_READOUT_TAIL:
-                sys_raddr = count; // Natural order read
-            STATE_PASS3, STATE_PASS3_TAIL,
-            STATE_PASS4, STATE_PASS4_TAIL:
-                sys_raddr = arp_int_addr; // Interleaved order read
-            default:
-                sys_raddr = {ADDR_WIDTH{1'b0}};
-        endcase
+            STATE_ARP_RESET2A: begin
+                enc_cnt <= 0;
+                state   <= STATE_CIRC_STATE2;
+            end
 
-        // Parity RAM logic
-        par1_we    = ((state_reg == STATE_PASS2) || (state_reg == STATE_PASS2_TAIL)) && pipe_valid;
-        par1_waddr = par_count;
-        par1_din   = {ce_y, ce_w};
-        par1_raddr = count;
+            STATE_CIRC_STATE2: begin
+                if (enc_cnt == 0) begin
+                    enc_load_init <= 1; enc_s_init <= 0; enc_cnt <= 1;
+                end else if (enc_cnt == 1) begin
+                    enc_cnt <= 2;
+                end else if (enc_cnt <= active_N + 1) begin
+                    enc_enable <= 1;
+                    if (enc_cnt >= 3 && enc_cnt <= active_N) arp_step <= 1;   // <-- FIX
+                    enc_cnt <= enc_cnt + 1;
+                end else begin
+                    s_final_enc2 <= enc_s_final;
+                    arp_start    <= 1;
+                    enc_cnt      <= 0;
+                    state        <= STATE_ARP_RESET2B;
+                end
+            end
 
-        par2_we    = ((state_reg == STATE_PASS4) || (state_reg == STATE_PASS4_TAIL)) && pipe_valid;
-        par2_waddr = par_count;
-        par2_din   = {ce_y, ce_w};
-        par2_raddr = count;
-    end
+            STATE_ARP_RESET2B: begin
+                enc_cnt <= 0;
+                state   <= STATE_ENCODE2;
+            end
 
-    always @(posedge clk) begin
-        if (!rst_n) begin
-            state_reg     <= STATE_IDLE;
-            count         <= {ADDR_WIDTH{1'b0}};
-            par_count     <= {ADDR_WIDTH{1'b0}};
-            pipe_valid    <= 1'b0;
-            arp_swap_q    <= 1'b0;
-            c1_reg        <= 4'd0;
-            c2_reg        <= 4'd0;
-            ce_load_init  <= 1'b0;
-            ce_init_state <= 4'd0;
-            arp_start     <= 1'b0;
-            arp_enable    <= 1'b0;
-            
-            shift_reg     <= 32'd0;
-            word_bit_cnt  <= 4'd0;
-            couple_valid  <= 1'b0;
-        end
-        else begin
-            ce_load_init <= 1'b0;
-            arp_start    <= 1'b0;
+            STATE_ENCODE2: begin
+                if (enc_cnt == 0) begin
+                    enc_load_init <= 1; enc_s_init <= s0_enc2; enc_cnt <= 1;
+                end else if (enc_cnt == 1) begin
+                    enc_cnt <= 2;
+                end else if (enc_cnt <= active_N + 2) begin
+                    if (enc_cnt <= active_N + 1) begin
+                        enc_enable <= 1;
+                        if (enc_cnt >= 3 && enc_cnt <= active_N) arp_step <= 1;   // <-- FIX
+                    end
+                    if (enc_cnt >= 3) begin
+                        par2_addr_a <= enc_cnt - 3;
+                        par2_we     <= 1;
+                    end
+                    enc_cnt <= enc_cnt + 1;
+                end else begin
+                    sys_addr_b <= 0; par1_addr_b <= 0; par2_addr_b <= 0;
+                    unload_stream <= 0; unload_idx <= 0;
+                    unload_started <= 0;
+                    unload_pipe_valid <= 1;
+                    pack_reg <= 0; pack_count <= 0;
+                    state <= STATE_UNLOAD;
+                end
+            end
 
-            case (state_reg)
-                STATE_IDLE: begin
-                    count        <= {ADDR_WIDTH{1'b0}};
-                    par_count    <= {ADDR_WIDTH{1'b0}};
-                    pipe_valid   <= 1'b0;
-                    word_bit_cnt <= 4'd0;
-
-                    // Start LOAD if FIFO has data and output has room
-                    if (fifo_m_axis_tvalid && fifo_m_axis_tready) begin
-                        shift_reg    <= fifo_m_axis_tdata;
-                        couple_valid <= 1'b1;
-                        state_reg    <= STATE_LOAD;
+            STATE_UNLOAD: begin
+                if (unload_pipe_valid) begin
+                    if (!unload_started) begin
+                        unload_started <= 1'b1;
                     end else begin
-                        couple_valid <= 1'b0;
-                    end
-                end
+                        case (unload_stream)
+                            3'd0: begin curr_data = {4'd0, sys_rd_comb};      curr_bits = 6'd2; end
+                            3'd1: begin curr_data = {5'd0, par1_rd_comb[1]};  curr_bits = 6'd1; end
+                            3'd2: begin curr_data = {5'd0, par1_rd_comb[0]};  curr_bits = 6'd1; end
+                            3'd3: begin curr_data = {5'd0, par2_rd_comb[1]};  curr_bits = 6'd1; end
+                            3'd4: begin curr_data = {5'd0, par2_rd_comb[0]};  curr_bits = 6'd1; end
+                            default: begin curr_data = 0; curr_bits = 0; end
+                        endcase
 
-                STATE_LOAD: begin
-                    couple_valid <= 1'b1;
-                    
-                    if (count == N_MINUS_1) begin
-                        // Done loading frame -> go to Pass 1
-                        state_reg    <= STATE_PASS1;
-                        couple_valid <= 1'b0;
-                        count        <= {ADDR_WIDTH{1'b0}};
-                    end
-                    else if (word_bit_cnt == 4'd15) begin
-                        if (fifo_m_axis_tvalid && fifo_m_axis_tready) begin
-                            shift_reg    <= fifo_m_axis_tdata;
-                            word_bit_cnt <= 4'd0;
-                            count        <= count + 1'b1;
+                        n_left_comb = pack_count + curr_bits - 32;
+
+                        if (pack_count + curr_bits >= 32) begin
+                            m_axis_tdata  <= pack_reg | ({26'd0, curr_data} >> n_left_comb);
+                            m_axis_tvalid <= 1;
+                            m_axis_tlast  <= (unload_stream == 4) &&
+                                             (unload_idx + 1 >= active_N) &&
+                                             (n_left_comb == 0);
+                            if (n_left_comb == 0) begin
+                                pack_reg <= 0; pack_count <= 0;
+                            end else begin
+                                pack_reg   <= {26'd0, curr_data} << (32 - n_left_comb);
+                                pack_count <= n_left_comb;
+                            end
                         end else begin
-                            state_reg    <= STATE_LOAD_RELOAD;
-                            couple_valid <= 1'b0;
+                            pack_reg   <= pack_reg | ({26'd0, curr_data} << (32 - curr_bits - pack_count));
+                            pack_count <= pack_count + curr_bits;
+                        end
+
+                        sys_addr_b  <= unload_idx + 1;
+                        par1_addr_b <= unload_idx + 1;
+                        par2_addr_b <= unload_idx + 1;
+
+                        if (unload_idx + 1 < active_N) begin
+                            unload_idx <= unload_idx + 1;
+                        end else begin
+                            if (unload_stream < 4) begin
+                                unload_stream  <= unload_stream + 1;
+                                unload_idx     <= 0;
+                                unload_started <= 1'b0;
+                                sys_addr_b     <= 0;
+                                par1_addr_b    <= 0;
+                                par2_addr_b    <= 0;
+                            end else begin
+                                unload_pipe_valid <= 0;
+                            end
                         end
                     end
-                    else begin
-                        shift_reg    <= {2'b00, shift_reg[31:2]};
-                        word_bit_cnt <= word_bit_cnt + 1'b1;
-                        count        <= count + 1'b1;
-                    end
-                end
-
-                STATE_LOAD_RELOAD: begin
-                    if (fifo_m_axis_tvalid && fifo_m_axis_tready) begin
-                        shift_reg    <= fifo_m_axis_tdata;
-                        word_bit_cnt <= 4'd0;
-                        count        <= count + 1'b1;
-                        couple_valid <= 1'b1;
-                        state_reg    <= STATE_LOAD;
+                end else if (!m_axis_tvalid) begin
+                    if (pack_count > 0) begin
+                        m_axis_tdata  <= pack_reg;
+                        m_axis_tvalid <= 1;
+                        m_axis_tlast  <= 1;
+                        pack_reg      <= 0;
+                        pack_count    <= 0;
                     end else begin
-                        couple_valid <= 1'b0;
+                        state <= STATE_IDLE;
                     end
                 end
+            end
 
-                STATE_PASS1: begin
-                    pipe_valid <= 1'b1;
-                    count      <= count + 1'b1;
-                    if (count == N_VAL) state_reg <= STATE_PASS1_TAIL;
-                end
-
-                STATE_PASS1_TAIL: begin
-                    c1_reg        <= rom_circ_state;
-                    ce_load_init  <= 1'b1;
-                    ce_init_state <= rom_circ_state;
-                    count         <= {ADDR_WIDTH{1'b0}};
-                    par_count     <= {ADDR_WIDTH{1'b0}};
-                    pipe_valid    <= 1'b0;
-                    state_reg     <= STATE_PASS2;
-                end
-
-                STATE_PASS2: begin
-                    pipe_valid <= 1'b1;
-                    count      <= count + 1'b1;
-                    if (pipe_valid) par_count <= par_count + 1'b1;
-                    if (count == N_VAL) state_reg <= STATE_PASS2_TAIL;
-                end
-
-                STATE_PASS2_TAIL: begin
-                    pipe_valid    <= 1'b0;
-                    count         <= {ADDR_WIDTH{1'b0}};
-                    par_count     <= {ADDR_WIDTH{1'b0}};
-                    arp_start     <= 1'b1;
-                    arp_enable    <= 1'b1;
-                    ce_load_init  <= 1'b1;
-                    ce_init_state <= 4'd0;
-                    state_reg     <= STATE_PASS3;
-                end
-
-                STATE_PASS3: begin
-                    pipe_valid <= arp_valid;
-                    arp_swap_q <= arp_swap_bits;
-                    if (arp_done) arp_enable <= 1'b0;
-                    if (arp_valid) begin
-                        count <= count + 1'b1;
-                        if (count == N_MINUS_1) begin
-                            arp_enable <= 1'b0;
-                            state_reg  <= STATE_PASS3_TAIL;
-                        end
-                    end
-                end
-
-                STATE_PASS3_TAIL: begin
-                    pipe_valid <= 1'b0;
-                    count      <= {ADDR_WIDTH{1'b0}};
-                    par_count  <= {ADDR_WIDTH{1'b0}};
-                    state_reg  <= STATE_PASS3_TAIL2;
-                end
-
-                STATE_PASS3_TAIL2: begin
-                    c2_reg        <= rom_circ_state;
-                    ce_load_init  <= 1'b1;
-                    ce_init_state <= rom_circ_state;
-                    arp_start     <= 1'b1;
-                    arp_enable    <= 1'b1;
-                    pipe_valid    <= 1'b0;
-                    count         <= {ADDR_WIDTH{1'b0}};
-                    par_count     <= {ADDR_WIDTH{1'b0}};
-                    state_reg     <= STATE_PASS4;
-                end
-
-                STATE_PASS4: begin
-                    pipe_valid <= arp_valid;
-                    arp_swap_q <= arp_swap_bits;
-                    if (arp_done) arp_enable <= 1'b0;
-                    if (arp_valid) begin
-                        count <= count + 1'b1;
-                        if (pipe_valid) par_count <= par_count + 1'b1;
-                        if (count == N_MINUS_1) begin
-                            arp_enable <= 1'b0;
-                            state_reg  <= STATE_PASS4_TAIL;
-                        end
-                    end
-                end
-
-                STATE_PASS4_TAIL: begin
-                    pipe_valid <= 1'b0;
-                    count      <= {ADDR_WIDTH{1'b0}};
-                    par_count  <= {ADDR_WIDTH{1'b0}};
-                    state_reg  <= STATE_READOUT;
-                end
-
-                STATE_READOUT: begin
-                    pipe_valid <= 1'b1;
-                    count      <= count + 1'b1;
-                    if (count == N_VAL) begin
-                        ce_load_init  <= 1'b1;
-                        ce_init_state <= 4'd0;
-                        state_reg     <= STATE_READOUT_TAIL;
-                    end
-                end
-
-                STATE_READOUT_TAIL: begin
-                    pipe_valid <= 1'b0;
-                    count      <= {ADDR_WIDTH{1'b0}};
-                    par_count  <= {ADDR_WIDTH{1'b0}};
-                    state_reg  <= STATE_IDLE;
-                end
-
-                default: state_reg <= STATE_IDLE;
+            default: state <= STATE_IDLE;
             endcase
         end
     end
