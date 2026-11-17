@@ -1,0 +1,66 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
+| Date         : Thu Nov 12 17:14:01 2026
+| Host         : luffy running 64-bit CachyOS
+| Command      : report_timing -to [get_ports m_axis_tvalid] -delay_type min -max_paths 1 -file /home/ahammed/Documents/turbo_encdoer/verify/05_m_axis_tvalid_hold.rpt
+| Design       : dvb_rcs2_encoder_wrapper
+| Device       : 7a35t-csg324
+| Speed File   : -1  PRODUCTION 1.23 2018-06-13
+| Design State : Routed
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Timing Report
+
+Slack (MET) :             2.948ns  (arrival time - required time)
+  Source:                 output_fifo/inst/gen_fifo.xpm_fifo_axis_inst/xpm_fifo_base_inst/gen_fwft.gdvld_fwft.data_valid_fwft_reg/C
+                            (rising edge-triggered cell FDRE clocked by sys_clk  {rise@0.000ns fall@8.138ns period=16.276ns})
+  Destination:            m_axis_tvalid
+                            (output port clocked by sys_clk  {rise@0.000ns fall@8.138ns period=16.276ns})
+  Path Group:             sys_clk
+  Path Type:              Min at Fast Process Corner
+  Requirement:            0.000ns  (sys_clk rise@0.000ns - sys_clk rise@0.000ns)
+  Data Path Delay:        2.046ns  (logic 1.331ns (65.060%)  route 0.715ns (34.940%))
+  Logic Levels:           1  (OBUF=1)
+  Output Delay:           -0.500ns
+  Clock Path Skew:        -1.437ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.000ns
+    Source Clock Delay      (SCD):    1.437ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock sys_clk rise edge)    0.000     0.000 r  
+    N15                                               0.000     0.000 r  aclk (IN)
+                         net (fo=0)                   0.000     0.000    aclk
+    N15                  IBUF (Prop_ibuf_I_O)         0.191     0.191 r  aclk_IBUF_inst/O
+                         net (fo=1, routed)           0.634     0.825    aclk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.026     0.851 r  aclk_IBUF_BUFG_inst/O
+                         net (fo=1405, routed)        0.587     1.437    output_fifo/inst/gen_fifo.xpm_fifo_axis_inst/xpm_fifo_base_inst/wr_clk
+    SLICE_X0Y19          FDRE                                         r  output_fifo/inst/gen_fifo.xpm_fifo_axis_inst/xpm_fifo_base_inst/gen_fwft.gdvld_fwft.data_valid_fwft_reg/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X0Y19          FDRE (Prop_fdre_C_Q)         0.128     1.565 r  output_fifo/inst/gen_fifo.xpm_fifo_axis_inst/xpm_fifo_base_inst/gen_fwft.gdvld_fwft.data_valid_fwft_reg/Q
+                         net (fo=2, routed)           0.715     2.280    m_axis_tvalid_OBUF
+    L16                  OBUF (Prop_obuf_I_O)         1.203     3.483 r  m_axis_tvalid_OBUF_inst/O
+                         net (fo=0)                   0.000     3.483    m_axis_tvalid
+    L16                                                               r  m_axis_tvalid (OUT)
+  -------------------------------------------------------------------    -------------------
+
+                         (clock sys_clk rise edge)    0.000     0.000 r  
+                         clock pessimism              0.000     0.000    
+                         clock uncertainty            0.035     0.035    
+                         output delay                 0.500     0.535    
+  -------------------------------------------------------------------
+                         required time                         -0.535    
+                         arrival time                           3.483    
+  -------------------------------------------------------------------
+                         slack                                  2.948    
+
+
+
+

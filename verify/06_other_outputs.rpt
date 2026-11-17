@@ -1,0 +1,66 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
+| Date         : Thu Nov 12 17:14:01 2026
+| Host         : luffy running 64-bit CachyOS
+| Command      : report_timing -to [get_ports {{m_axis_tdata[*]} m_axis_tlast s_axis_tready}] -delay_type max -max_paths 1 -file /home/ahammed/Documents/turbo_encdoer/verify/06_other_outputs.rpt
+| Design       : dvb_rcs2_encoder_wrapper
+| Device       : 7a35t-csg324
+| Speed File   : -1  PRODUCTION 1.23 2018-06-13
+| Design State : Routed
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Timing Report
+
+Slack (MET) :             3.915ns  (required time - arrival time)
+  Source:                 output_fifo/inst/gen_fifo.xpm_fifo_axis_inst/xpm_fifo_base_inst/gen_sdpram.xpm_memory_base_inst/gen_rd_b.gen_doutb_pipe.gen_stage.doutb_pipe_reg[0][43]/C
+                            (rising edge-triggered cell FDRE clocked by sys_clk  {rise@0.000ns fall@8.138ns period=16.276ns})
+  Destination:            m_axis_tlast
+                            (output port clocked by sys_clk  {rise@0.000ns fall@8.138ns period=16.276ns})
+  Path Group:             sys_clk
+  Path Type:              Max at Slow Process Corner
+  Requirement:            16.276ns  (sys_clk rise@16.276ns - sys_clk rise@0.000ns)
+  Data Path Delay:        5.675ns  (logic 3.225ns (56.839%)  route 2.449ns (43.161%))
+  Logic Levels:           1  (OBUF=1)
+  Output Delay:           2.000ns
+  Clock Path Skew:        -4.651ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.000ns = ( 16.276 - 16.276 ) 
+    Source Clock Delay      (SCD):    4.651ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock sys_clk rise edge)    0.000     0.000 r  
+    N15                                               0.000     0.000 r  aclk (IN)
+                         net (fo=0)                   0.000     0.000    aclk
+    N15                  IBUF (Prop_ibuf_I_O)         0.962     0.962 r  aclk_IBUF_inst/O
+                         net (fo=1, routed)           1.972     2.933    aclk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.096     3.029 r  aclk_IBUF_BUFG_inst/O
+                         net (fo=1405, routed)        1.621     4.651    output_fifo/inst/gen_fifo.xpm_fifo_axis_inst/xpm_fifo_base_inst/gen_sdpram.xpm_memory_base_inst/clka
+    SLICE_X0Y22          FDRE                                         r  output_fifo/inst/gen_fifo.xpm_fifo_axis_inst/xpm_fifo_base_inst/gen_sdpram.xpm_memory_base_inst/gen_rd_b.gen_doutb_pipe.gen_stage.doutb_pipe_reg[0][43]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X0Y22          FDRE (Prop_fdre_C_Q)         0.419     5.070 r  output_fifo/inst/gen_fifo.xpm_fifo_axis_inst/xpm_fifo_base_inst/gen_sdpram.xpm_memory_base_inst/gen_rd_b.gen_doutb_pipe.gen_stage.doutb_pipe_reg[0][43]/Q
+                         net (fo=1, routed)           2.449     7.519    m_axis_tlast_OBUF
+    L18                  OBUF (Prop_obuf_I_O)         2.806    10.325 r  m_axis_tlast_OBUF_inst/O
+                         net (fo=0)                   0.000    10.325    m_axis_tlast
+    L18                                                               r  m_axis_tlast (OUT)
+  -------------------------------------------------------------------    -------------------
+
+                         (clock sys_clk rise edge)   16.276    16.276 r  
+                         clock pessimism              0.000    16.276    
+                         clock uncertainty           -0.035    16.241    
+                         output delay                -2.000    14.241    
+  -------------------------------------------------------------------
+                         required time                         14.241    
+                         arrival time                         -10.325    
+  -------------------------------------------------------------------
+                         slack                                  3.915    
+
+
+
+

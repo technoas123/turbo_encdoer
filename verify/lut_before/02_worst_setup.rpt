@@ -1,0 +1,92 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+--------------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
+| Date         : Thu Nov 12 17:14:01 2026
+| Host         : luffy running 64-bit CachyOS
+| Command      : report_timing -delay_type max -max_paths 1 -path_type full -file /home/ahammed/Documents/turbo_encdoer/verify/02_worst_setup.rpt
+| Design       : dvb_rcs2_encoder_wrapper
+| Device       : 7a35t-csg324
+| Speed File   : -1  PRODUCTION 1.23 2018-06-13
+| Design State : Routed
+--------------------------------------------------------------------------------------------------------------------------------------------------
+
+Timing Report
+
+Slack (MET) :             2.422ns  (required time - arrival time)
+  Source:                 encoder_core/arp_inst/S_reg_reg[4]/C
+                            (rising edge-triggered cell FDCE clocked by sys_clk  {rise@0.000ns fall@8.138ns period=16.276ns})
+  Destination:            encoder_core/pack_reg_reg[1]/D
+                            (rising edge-triggered cell FDCE clocked by sys_clk  {rise@0.000ns fall@8.138ns period=16.276ns})
+  Path Group:             sys_clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            16.276ns  (sys_clk rise@16.276ns - sys_clk rise@0.000ns)
+  Data Path Delay:        13.802ns  (logic 4.368ns (31.648%)  route 9.434ns (68.352%))
+  Logic Levels:           14  (CARRY4=3 LUT4=1 LUT5=1 LUT6=6 MUXF7=2 RAMD64E=1)
+  Clock Path Skew:        -0.046ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.295ns = ( 20.571 - 16.276 ) 
+    Source Clock Delay      (SCD):    4.663ns
+    Clock Pessimism Removal (CPR):    0.322ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock sys_clk rise edge)    0.000     0.000 r  
+                         propagated clock network latency
+                                                      4.663     4.663    
+    SLICE_X4Y40          FDCE                         0.000     4.663 r  encoder_core/arp_inst/S_reg_reg[4]/C
+    SLICE_X4Y40          FDCE (Prop_fdce_C_Q)         0.456     5.119 r  encoder_core/arp_inst/S_reg_reg[4]/Q
+                         net (fo=4, routed)           1.123     6.242    encoder_core/arp_inst/S_reg_reg_n_0_[4]
+    SLICE_X1Y42          LUT6 (Prop_lut6_I0_O)        0.124     6.366 r  encoder_core/arp_inst/int_addr0_carry__0_i_9/O
+                         net (fo=1, routed)           0.000     6.366    encoder_core/arp_inst/int_addr0_carry__0_i_9_n_0
+    SLICE_X1Y42          CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.532     6.898 r  encoder_core/arp_inst/int_addr0_carry__0_i_1/CO[3]
+                         net (fo=1, routed)           0.000     6.898    encoder_core/arp_inst/int_addr0_carry__0_i_1_n_0
+    SLICE_X1Y43          CARRY4 (Prop_carry4_CI_O[3])
+                                                      0.313     7.211 r  encoder_core/arp_inst/int_addr0_carry__1_i_1/O[3]
+                         net (fo=4, routed)           0.820     8.031    encoder_core/arp_inst/int_addr0_carry__1_i_1_n_4
+    SLICE_X4Y44          LUT4 (Prop_lut4_I0_O)        0.306     8.337 r  encoder_core/arp_inst/int_addr1_carry__0_i_5/O
+                         net (fo=1, routed)           0.000     8.337    encoder_core/arp_inst/int_addr1_carry__0_i_5_n_0
+    SLICE_X4Y44          CARRY4 (Prop_carry4_S[1]_CO[2])
+                                                      0.570     8.907 r  encoder_core/arp_inst/int_addr1_carry__0/CO[2]
+                         net (fo=19, routed)          0.865     9.772    encoder_core/arp_inst/int_addr1
+    SLICE_X7Y41          LUT5 (Prop_lut5_I3_O)        0.341    10.113 r  encoder_core/arp_inst/mem_reg_0_127_0_0_i_6/O
+                         net (fo=64, routed)          1.768    11.881    encoder_core/sys_ram/mem_reg_3456_3583_0_0/DPRA2
+    SLICE_X14Y54         RAMD64E (Prop_ramd64e_RADR2_O)
+                                                      0.332    12.213 r  encoder_core/sys_ram/mem_reg_3456_3583_0_0/DP.HIGH/O
+                         net (fo=1, routed)           0.000    12.213    encoder_core/sys_ram/mem_reg_3456_3583_0_0/DPO1
+    SLICE_X14Y54         MUXF7 (Prop_muxf7_I1_O)      0.214    12.427 r  encoder_core/sys_ram/mem_reg_3456_3583_0_0/F7.DP/O
+                         net (fo=1, routed)           0.875    13.302    encoder_core/sys_ram/mem_reg_3456_3583_0_0_n_0
+    SLICE_X13Y51         LUT6 (Prop_lut6_I0_O)        0.297    13.599 r  encoder_core/sys_ram/dout[0]_i_6/O
+                         net (fo=1, routed)           0.000    13.599    encoder_core/sys_ram/dout[0]_i_6_n_0
+    SLICE_X13Y51         MUXF7 (Prop_muxf7_I0_O)      0.212    13.811 r  encoder_core/sys_ram/dout_reg[0]_i_2/O
+                         net (fo=1, routed)           1.053    14.864    encoder_core/sys_ram/dout_reg[0]_i_2_n_0
+    SLICE_X11Y47         LUT6 (Prop_lut6_I0_O)        0.299    15.163 r  encoder_core/sys_ram/dout[0]_i_1/O
+                         net (fo=4, routed)           0.944    16.107    encoder_core/par2_ram/sys_rd_comb[0]
+    SLICE_X11Y30         LUT6 (Prop_lut6_I2_O)        0.124    16.231 f  encoder_core/par2_ram/m_axis_tdata[0]_i_2/O
+                         net (fo=25, routed)          1.315    17.546    encoder_core/par2_ram/unload_stream_reg[2]
+    SLICE_X7Y17          LUT6 (Prop_lut6_I1_O)        0.124    17.670 r  encoder_core/par2_ram/pack_reg[25]_i_2/O
+                         net (fo=4, routed)           0.670    18.341    encoder_core/par2_ram/pack_reg[25]_i_2_n_0
+    SLICE_X5Y18          LUT6 (Prop_lut6_I2_O)        0.124    18.465 r  encoder_core/par2_ram/pack_reg[1]_i_1/O
+                         net (fo=1, routed)           0.000    18.465    encoder_core/par2_ram_n_21
+    SLICE_X5Y18          FDCE                                         r  encoder_core/pack_reg_reg[1]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock sys_clk rise edge)   16.276    16.276 r  
+                         propagated clock network latency
+                                                      4.295    20.571    
+                         clock pessimism              0.322    20.893    
+                         clock uncertainty           -0.035    20.857    
+    SLICE_X5Y18          FDCE (Setup_fdce_C_D)        0.029    20.886    encoder_core/pack_reg_reg[1]
+  -------------------------------------------------------------------
+                         required time                         20.886    
+                         arrival time                         -18.465    
+  -------------------------------------------------------------------
+                         slack                                  2.422    
+
+
+
+

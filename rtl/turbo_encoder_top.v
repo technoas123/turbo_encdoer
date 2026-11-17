@@ -39,18 +39,20 @@ module turbo_encoder_top #(
     wire [11:0] rom_N, rom_Np1, rom_Np2, rom_P;
     wire [11:0] rom_qt0, rom_qt1, rom_qt2, rom_qt3;
     wire [3:0]  rom_R15;
+    wire [2:0]  rom_rate_code;
 
     profile_lookup_rom profile_rom_inst (
-        .waveform_id (cfg_waveform_id),
-        .cfg_N   (rom_N),
-        .cfg_P   (rom_P),
-        .cfg_Np1 (rom_Np1),
-        .cfg_Np2 (rom_Np2),
-        .cfg_R15 (rom_R15),
-        .cfg_qt0 (rom_qt0),
-        .cfg_qt1 (rom_qt1),
-        .cfg_qt2 (rom_qt2),
-        .cfg_qt3 (rom_qt3)
+        .waveform_id   (cfg_waveform_id),
+        .cfg_N         (rom_N),
+        .cfg_P         (rom_P),
+        .cfg_Np1       (rom_Np1),
+        .cfg_Np2       (rom_Np2),
+        .cfg_R15       (rom_R15),
+        .cfg_qt0       (rom_qt0),
+        .cfg_qt1       (rom_qt1),
+        .cfg_qt2       (rom_qt2),
+        .cfg_qt3       (rom_qt3),
+        .cfg_rate_code (rom_rate_code)
     );
 
     //--------------------------------------------------------------------------
@@ -59,20 +61,21 @@ module turbo_encoder_top #(
     reg [11:0] active_N_reg, active_P_reg, active_Np1_reg, active_Np2_reg;
     reg [11:0] active_qt0_reg, active_qt1_reg, active_qt2_reg, active_qt3_reg;
     reg [3:0]  active_r_reg;
+    reg [2:0]  active_rate_code_reg;
 
-    wire [11:0] active_N   = active_N_reg;
-    wire [11:0] active_P   = active_P_reg;
-    wire [11:0] active_Np1 = active_Np1_reg;
-    wire [11:0] active_Np2 = active_Np2_reg;
-    wire [11:0] active_qt0 = active_qt0_reg;
-    wire [11:0] active_qt1 = active_qt1_reg;
-    wire [11:0] active_qt2 = active_qt2_reg;
-    wire [11:0] active_qt3 = active_qt3_reg;
-    wire [3:0]  active_r   = active_r_reg;
+    wire [11:0] active_N         = active_N_reg;
+    wire [11:0] active_P         = active_P_reg;
+    wire [11:0] active_Np1       = active_Np1_reg;
+    wire [11:0] active_Np2       = active_Np2_reg;
+    wire [11:0] active_qt0       = active_qt0_reg;
+    wire [11:0] active_qt1       = active_qt1_reg;
+    wire [11:0] active_qt2       = active_qt2_reg;
+    wire [11:0] active_qt3       = active_qt3_reg;
+    wire [3:0]  active_r         = active_r_reg;
+    wire [2:0]  active_rate_code = active_rate_code_reg;
 
     //--------------------------------------------------------------------------
     // Memories (registered read, one-cycle latency, BRAM-compatible)
-    // sys_raddr is the only combinational address: ARP index in pass 2.
     //--------------------------------------------------------------------------
     wire is_pass2 = (state == STATE_CIRC_STATE2) || (state == STATE_ENCODE2);
 
@@ -122,9 +125,6 @@ module turbo_encoder_top #(
     wire       enc_y, enc_w;
     wire [3:0] enc_s_final;
 
-    // Registered RAM data in both passes. In pass 2 the ARP index runs one
-    // cycle ahead of the encoder (see CIRC_STATE2 / ENCODE2), so the data
-    // and the swap bit arrive in the same cycle as before.
     wire [1:0] enc_data = sys_rd_data;
 
     reg arp_swap_d1;
@@ -178,14 +178,33 @@ module turbo_encoder_top #(
     //--------------------------------------------------------------------------
     // UNLOAD: issue stage (addresses) and consume stage (packing)
     //--------------------------------------------------------------------------
-    reg        unload_issue;     // addresses are being issued
-    reg [2:0]  unload_stream;    // 0 sys, 1 par1 Y, 2 par1 W, 3 par2 Y, 4 par2 W
-    reg        tag_valid;        // data on RAM outputs belongs to a valid read
+    reg        unload_issue;
+    reg [2:0]  unload_stream;
+    reg        tag_valid;
     reg [2:0]  tag_stream;
-    reg        tag_last;         // this read is the final bit of the frame
+    reg        tag_last;
+    reg        tag_keep;
 
     reg [5:0]  pack_count;
     reg [31:0] pack_reg;
+
+    //--------------------------------------------------------------------------
+    // Output delay buffer (one word) - ensures tlast on the true last word
+    //--------------------------------------------------------------------------
+    reg [31:0] out_buf_data;
+    reg        out_buf_valid;
+
+    //--------------------------------------------------------------------------
+    // Puncturer control (combinational)
+    //--------------------------------------------------------------------------
+    wire punct_keep;
+
+    puncturer_ctrl punct_inst (
+        .rate_code (active_rate_code),
+        .stream_id (unload_stream),
+        .addr      (sys_addr_b),
+        .keep      (punct_keep)
+    );
 
     wire [5:0] curr_data_w =
         (tag_stream == 3'd0) ? {4'd0, sys_rd_data}     :
@@ -196,8 +215,8 @@ module turbo_encoder_top #(
 
     wire [5:0]  curr_bits_w = (tag_stream == 3'd0) ? 6'd2 : 6'd1;
     wire [31:0] cd32       = {26'd0, curr_data_w};
-    wire [5:0]  total      = pack_count + curr_bits_w;   // 0..33
-    wire [5:0]  n_left     = total - 6'd32;              // valid when total >= 32 (0 or 1)
+    wire [5:0]  total      = pack_count + curr_bits_w;
+    wire [5:0]  n_left     = total - 6'd32;
     wire [31:0] full_word  = pack_reg | (cd32 >> n_left);
     wire [31:0] lo_frag    = cd32 << (6'd32 - n_left);
     wire [5:0]  sh_else    = 6'd32 - total;
@@ -222,14 +241,16 @@ module turbo_encoder_top #(
             arp_start <= 0; arp_step <= 0;
             in_count <= 0; bit_ptr <= 0; shift_reg <= 0; load_wait_data <= 0;
             unload_issue <= 0; unload_stream <= 0;
-            tag_valid <= 0; tag_stream <= 0; tag_last <= 0;
+            tag_valid <= 0; tag_stream <= 0; tag_last <= 0; tag_keep <= 1'b1;
             pack_reg <= 0; pack_count <= 0;
+            out_buf_data <= 0; out_buf_valid <= 0;
             s_final_enc1 <= 0; s_final_enc2 <= 0;
             active_N_reg   <= 0; active_P_reg   <= 0;
             active_Np1_reg <= 0; active_Np2_reg <= 0;
             active_qt0_reg <= 0; active_qt1_reg <= 0;
             active_qt2_reg <= 0; active_qt3_reg <= 0;
             active_r_reg   <= 0;
+            active_rate_code_reg <= 3'd0;
         end else begin
             sys_we <= 0; par1_we <= 0; par2_we <= 0;
             arp_start <= 0; arp_step <= 0;
@@ -246,12 +267,14 @@ module turbo_encoder_top #(
                 enc_cnt <= 0;
                 unload_issue <= 0; tag_valid <= 0;
                 pack_count <= 0; pack_reg <= 0;
+                out_buf_valid <= 0;
                 if (cfg_valid) begin
-                    active_N_reg   <= rom_N;    active_P_reg   <= rom_P;
-                    active_Np1_reg <= rom_Np1;  active_Np2_reg <= rom_Np2;
-                    active_qt0_reg <= rom_qt0;  active_qt1_reg <= rom_qt1;
-                    active_qt2_reg <= rom_qt2;  active_qt3_reg <= rom_qt3;
-                    active_r_reg   <= rom_R15;
+                    active_N_reg         <= rom_N;    active_P_reg   <= rom_P;
+                    active_Np1_reg       <= rom_Np1;  active_Np2_reg <= rom_Np2;
+                    active_qt0_reg       <= rom_qt0;  active_qt1_reg <= rom_qt1;
+                    active_qt2_reg       <= rom_qt2;  active_qt3_reg <= rom_qt3;
+                    active_r_reg         <= rom_R15;
+                    active_rate_code_reg <= rom_rate_code;
                 end
                 if (s_axis_tvalid && s_axis_tready) begin
                     shift_reg <= s_axis_tdata; s_axis_tready <= 0;
@@ -281,9 +304,6 @@ module turbo_encoder_top #(
                 end
             end
 
-            // ==================================================================
-            // PROBE PASS 1: encode N couples from state 0 to find s_final_enc1
-            // ==================================================================
             STATE_CIRC_STATE1: begin
                 if (enc_cnt == 0) begin
                     enc_load_init <= 1; enc_s_init <= 0; sys_addr_b <= 0; enc_cnt <= 1;
@@ -293,7 +313,6 @@ module turbo_encoder_top #(
                     enc_enable <= 1;
                     if (enc_cnt <= active_N) sys_addr_b <= enc_cnt - 1;
                     enc_cnt <= enc_cnt + 1;
-                // FIX A: one idle cycle so the encoder state settles
                 end else if (enc_cnt == active_Np2) begin
                     enc_cnt <= enc_cnt + 1;
                 end else begin
@@ -303,9 +322,6 @@ module turbo_encoder_top #(
                 end
             end
 
-            // ==================================================================
-            // ENCODE PASS 1: from circular state s0_enc1
-            // ==================================================================
             STATE_ENCODE1: begin
                 if (enc_cnt == 0) begin
                     enc_load_init <= 1; enc_s_init <= s0_enc1; sys_addr_b <= 0; enc_cnt <= 1;
@@ -332,11 +348,6 @@ module turbo_encoder_top #(
                 state   <= STATE_CIRC_STATE2;
             end
 
-            // ==================================================================
-            // PROBE PASS 2: interleaved order, start state 0
-            // ARP steps at enc_cnt 1..N-1 (one cycle earlier than the old
-            // comb schedule, to compensate for the registered RAM read).
-            // ==================================================================
             STATE_CIRC_STATE2: begin
                 if (enc_cnt == 0) begin
                     enc_load_init <= 1; enc_s_init <= 0; enc_cnt <= 1;
@@ -347,7 +358,6 @@ module turbo_encoder_top #(
                     enc_enable <= 1;
                     if (enc_cnt <= active_N - 1) arp_step <= 1;
                     enc_cnt <= enc_cnt + 1;
-                // FIX A: same idle cycle as CIRC_STATE1
                 end else if (enc_cnt == active_Np2) begin
                     enc_cnt <= enc_cnt + 1;
                 end else begin
@@ -363,9 +373,6 @@ module turbo_encoder_top #(
                 state   <= STATE_ENCODE2;
             end
 
-            // ==================================================================
-            // ENCODE PASS 2: from circular state s0_enc2 (same ARP schedule)
-            // ==================================================================
             STATE_ENCODE2: begin
                 if (enc_cnt == 0) begin
                     enc_load_init <= 1; enc_s_init <= s0_enc2; enc_cnt <= 1;
@@ -386,17 +393,16 @@ module turbo_encoder_top #(
                     unload_issue  <= 1;
                     tag_valid     <= 0;
                     pack_reg <= 0; pack_count <= 0;
+                    out_buf_valid <= 0;
                     state <= STATE_UNLOAD;
                 end
             end
 
-            // ==================================================================
-            // UNLOAD: sys, par1 (Y,W), par2 (Y,W), packed MSB-first to 32 bits
-            // ==================================================================
             STATE_UNLOAD: begin
-                // ---- Stage 1: issue addresses. sys_addr_b doubles as the index.
+                // ---- Stage 1: issue addresses ----
                 tag_valid  <= unload_issue;
                 tag_stream <= unload_stream;
+                tag_keep   <= punct_keep;
                 tag_last   <= unload_issue && (unload_stream == 3'd4) &&
                               (sys_addr_b == active_N - 1);
 
@@ -415,12 +421,17 @@ module turbo_encoder_top #(
                     end
                 end
 
-                // ---- Stage 2: consume registered data (one cycle after issue)
-                if (tag_valid) begin
+                // ---- Stage 2: consume registered data, gated by tag_keep ----
+                if (tag_valid && tag_keep) begin
                     if (total >= 6'd32) begin
-                        m_axis_tdata  <= full_word;
-                        m_axis_tvalid <= 1'b1;
-                        m_axis_tlast  <= tag_last && (n_left == 6'd0);
+                        // Word complete: emit buffered word (if any), buffer new
+                        if (out_buf_valid) begin
+                            m_axis_tdata  <= out_buf_data;
+                            m_axis_tvalid <= 1'b1;
+                            m_axis_tlast  <= 1'b0;
+                        end
+                        out_buf_data  <= full_word;
+                        out_buf_valid <= 1'b1;
                         if (n_left == 6'd0) begin
                             pack_reg   <= 0;
                             pack_count <= 0;
@@ -432,15 +443,31 @@ module turbo_encoder_top #(
                         pack_reg   <= else_word;
                         pack_count <= total;
                     end
-                end else if (!unload_issue && !m_axis_tvalid) begin
-                    // pipeline drained: flush any partial word with tlast
-                    if (pack_count > 0) begin
+                end else if (tag_valid && !tag_keep) begin
+                    // Punctured bit: do NOT pack
+                end else if (!unload_issue && !tag_valid && !m_axis_tvalid) begin
+                    // ---- Drain phase: all tags consumed, output free ----
+                    if (out_buf_valid && pack_count > 0) begin
+                        // Emit buffered word (tlast=0); partial follows next cycle
+                        m_axis_tdata  <= out_buf_data;
+                        m_axis_tvalid <= 1'b1;
+                        m_axis_tlast  <= 1'b0;
+                        out_buf_valid <= 1'b0;
+                    end else if (out_buf_valid && pack_count == 0) begin
+                        // Exact boundary: buffered word IS the last word
+                        m_axis_tdata  <= out_buf_data;
+                        m_axis_tvalid <= 1'b1;
+                        m_axis_tlast  <= 1'b1;
+                        out_buf_valid <= 1'b0;
+                    end else if (!out_buf_valid && pack_count > 0) begin
+                        // Partial word flush (safety - normally buffer holds prev)
                         m_axis_tdata  <= pack_reg;
                         m_axis_tvalid <= 1'b1;
                         m_axis_tlast  <= 1'b1;
                         pack_reg      <= 0;
                         pack_count    <= 0;
                     end else begin
+                        // Nothing left to emit
                         state <= STATE_IDLE;
                     end
                 end
